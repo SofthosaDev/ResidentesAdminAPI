@@ -1,0 +1,166 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System.Text;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using TuAdelanto.Services;
+using Newtonsoft.Json.Serialization;
+using Microsoft.AspNetCore.HttpOverrides;
+using System.Reflection;
+using System;
+using System.IO;
+using Microsoft.AspNetCore.Http;
+using TuAdelanto.Services.Utilidades;
+using Microsoft.Extensions.Caching.Distributed;
+using TuAdelanto.Services.Seguridad;
+using TuAdelanto.Helpers;
+using Microsoft.OpenApi.Models;
+using EvaluadorFinancieraWS.Services.Cobranza.Utilidades;
+using EvaluadorFinancieraWS.Services.Utilidades;
+
+namespace TuAdelanto
+{
+    public class Startup
+    {
+        public Startup(IWebHostEnvironment env)
+        {
+            string json_path = "";
+            if (env.EnvironmentName == "production")
+            {
+                json_path = "appsettings.json";
+            }
+            else
+            {
+                json_path = "appsettings.json";
+            }
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile(json_path, optional: false, reloadOnChange: true);
+
+
+            Configuration = builder.Build();
+
+        }
+
+        public IConfiguration Configuration { get; }
+
+       public void ConfigureServices(IServiceCollection services)
+        {
+
+            AgregarAutenticacion(services);
+            ConfigurarSwagger(services);
+            ConfigurarSqlite(services);
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy", builder => builder
+                //.WithOrigins("http://localhost:5000")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
+            });
+            services.AddControllers().AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+            });
+            services.AddSignalR();
+            SetearAppSetting(services);
+            AgregarServicios(services);
+
+        }
+
+        public void AgregarAutenticacion(IServiceCollection services)
+        {
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["AppSettings:Secret"])),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
+            });
+
+        }
+        public void SetearAppSetting(IServiceCollection services)
+        {
+            services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
+        }
+
+        public void AgregarServicios(IServiceCollection services)
+        {
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddDistributedMemoryCache();
+            services.AddTransient<TuAdelanto.Services.Seguridad.TokenManagerMiddleware>();
+            services.AddScoped<IUsuarioService, UsuariosService>();
+            services.AddScoped<IExcelService, ExcelService>();
+            services.AddScoped<IEmailService, EMailService>();
+            services.AddScoped<IBaseDatosService, BaseDatosService>();
+            services.AddScoped<IArchivosService, ArchivosService>();
+
+            
+
+        }
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            app.UseHttpsRedirection();
+            app.UseCors("CorsPolicy");
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Perros -Documentacion");
+                c.RoutePrefix = string.Empty;
+            });
+
+            app.UseRouting();
+            app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseTokenManager();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapControllers();
+                //endpoints.MapHub<SesionHub>("/sesionHub");
+            });
+
+        }
+
+        public void ConfigurarSqlite(IServiceCollection services)
+        {
+            //services.AddEntityFrameworkSqlite().AddDbContext<SqliteContext>();
+        }
+
+        public void ConfigurarSwagger(IServiceCollection services)
+        {
+            string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "TuAdelantoDocumentacion",
+                    Version = "v1",
+                });
+
+
+                c.IncludeXmlComments(xmlPath);
+            });
+        }
+    }
+}

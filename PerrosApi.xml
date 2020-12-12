@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TuAdelanto</name>
+    </assembly>
+    <members>
+        <member name="M:TuAdelanto.Classes.DataBase.CreateParameter(System.String,System.Double)">
+            <summary>
+            Crea Parametro de entrada de tipo Entero largo
+            </summary>
+            <param name="strParameterName"></param>
+            <param name="nParameter"></param>
+        </member>
+        <member name="M:TuAdelanto.Helpers.ExtensionMethods.ToList``1(System.Data.DataTable)">
+            <summary>
+            Converts a DataTable to a list with generic objects
+            </summary>
+            <typeparam name="T">Generic object</typeparam>
+            <param name="table">DataTable</param>
+            <returns>List with generic objects</returns>
+        </member>
+        <member name="T:TuAdelanto.Services.ServicesCRUDBase">
+            <summary>
+            Creación, Lectura, Actualización y Eliminación
+            </summary>
+        </member>
+        <member name="T:TuAdelanto.Services.IServicesCRUDBase">
+            <summary>
+            Creacion, Lectura y Actualización
+            </summary>
+        </member>
+        <member name="T:TuAdelanto.Services.ServicesCRXXBase">
+            <summary>
+            Creación y Lectura
+            </summary>
+        </member>
+        <member name="T:TuAdelanto.Services.ServicesXRXXBase">
+            <summary>
+            Lectura
+            </summary>
+        </member>
+    </members>
+</doc>
