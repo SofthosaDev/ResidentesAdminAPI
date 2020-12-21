@@ -107,8 +107,9 @@ namespace TuAdelanto
             services.AddScoped<IEmailService, EMailService>();
             services.AddScoped<IBaseDatosService, BaseDatosService>();
             services.AddScoped<IArchivosService, ArchivosService>();
+            services.AddScoped<ISMSService, SMSService>();
 
-            
+
 
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -159,8 +160,15 @@ namespace TuAdelanto
                 });
 
 
-                c.IncludeXmlComments(xmlPath);
+               //c.IncludeXmlComments(xmlPath);
             });
         }
     }
 }
+
+
+/*
+ 
+        
+
+     */

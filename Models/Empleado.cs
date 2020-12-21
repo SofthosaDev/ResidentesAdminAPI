@@ -27,10 +27,16 @@ namespace TuAdelanto.Models
         public string Estado { get; set; } = "";
         public string CP { get; set; } = "";
         public string Celular { get; set; }
-        public string Correo { get; set; } = "";
+        public string Nombre { get; set; } = "";
         public string Puesto { get; set; } = "";
         public int CorteId { get; set; }
         public decimal IngresoNeto { get; set; } = 0;
         public decimal LimiteCredito { get; set; } = 0;
+        public string NumEmpleado { get; set; }
+    }
+
+    public class ConfirmacionCelular { 
+        public int IdEmpleado { get; set; }
+        public string CodigoConfirmacion { get; set; }
     }
 }

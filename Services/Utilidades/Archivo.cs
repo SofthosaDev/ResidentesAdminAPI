@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Data.SQLite;
 using TuAdelanto.Models.Utilidades;
 using TuAdelanto.Services.Utilidades;
+using PerrosApp.Classes;
 
 namespace EvaluadorFinancieraWS.Services.Utilidades
 {
@@ -27,6 +28,8 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
         public void EliminarArchivo(Guid guid);
 
         public Guid SubirArchivo(IFormFile Archivo);
+
+        public string SubirGoogleDrive(Guid guid);
     }
     public class ArchivosService : IArchivosService
     {
@@ -63,7 +66,7 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
         public string MoverArchivo(string carpeta_destino, Guid guid)
         {
             string destino_relativo = "";
-            if (!System.IO.Directory.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{carpeta_destino}")))
+            if (!Directory.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{carpeta_destino}")))
             {
                 System.IO.Directory.CreateDirectory(
                     Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{carpeta_destino}")
@@ -207,6 +210,31 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
         {
             //throw
             return true;
+        }
+
+        public string SubirGoogleDrive(Guid guid)
+        {
+
+            ArchivoTemporal archivo_temporal = BuscarArchivoTemporal(guid);
+            string ruta = archivo_temporal.RutaAbsoluta;
+            string link = "";
+            if (File.Exists(ruta))
+            {
+                string mime =  MimeTypes.Core.MimeTypeMap.GetMimeType(archivo_temporal.Extension);
+                gdrive gd = new gdrive(_appSettings);
+                using (var stream = new System.IO.FileStream( ruta, System.IO.FileMode.Open)) {
+                    link = gd.SubirArchivo(stream, archivo_temporal.Nombre, mime);
+                }
+                    
+                return link;
+
+            }
+            else
+            {
+                throw (new Exception($@"El archiasdvo con Id: {guid} no existe, 
+                tal ves ha pasado demasiado tiempo desde su creación, verifica"));
+            }
+            EliminarAntiguos();
         }
     }
 }

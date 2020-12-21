@@ -18,6 +18,7 @@ namespace EvaluadorFinancieraWS.Services.Cobranza.Utilidades
         public List<T> consultarSp<T>(string sp, object parametros) where T : class, new();
         public T ejecutarSp<T>(string sp, object parametros) where T : class, new();
         public RespuestaBDModel ejecutarSp(string sp, object parametros);
+        public int GetUsuarioFromSession();
     };
     public class BaseDatosService : IBaseDatosService
     {
@@ -53,7 +54,19 @@ namespace EvaluadorFinancieraWS.Services.Cobranza.Utilidades
             return lista;
 
         }
+        public int GetUsuarioFromSession() {
+            int IdUsuario = 0;
+            if (_httpContextAccessor != null)
+            {
+                string val = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (val != null)
+                {
+                    IdUsuario = int.Parse(val);
+                }
 
+            }
+            return IdUsuario;
+        }
         public T ejecutarSp<T>(string sp, object parametros) where T : class, new()
         {
             int Id_Usuario = 0;

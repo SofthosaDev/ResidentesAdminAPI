@@ -14,7 +14,7 @@ namespace TuAdelanto.Controllers
 
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
+    [AllowAnonymous]//[Authorize]
     public class UsuariosController : ControllerBase
     {
         private IUsuarioService _userService;
@@ -41,7 +41,7 @@ namespace TuAdelanto.Controllers
         [HttpPost("authenticate")]
         public IActionResult Authenticate([FromBody]AutenticacionModel modelo)
         {
-            Usuario user = _userService.Authenticate(modelo.Correo, modelo.Contrasena);
+            Usuario user = _userService.Authenticate(modelo.Nombre, modelo.Contrasena);
 
             if (user == null)
                 return BadRequest(new
@@ -80,7 +80,7 @@ namespace TuAdelanto.Controllers
         [HttpPost("ResetearContrasena")]
         public IActionResult ResetearContrasena(SolicitudToken s)
         {
-            RespuestaBDModel res = this._userService.CrearTokenRecuperacion(s.Correo);
+            RespuestaBDModel res = this._userService.CrearTokenRecuperacion(s.NombreUsuario);
             if (res.Exito)
             {
                 return Ok(res);

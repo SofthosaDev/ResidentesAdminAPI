@@ -11,7 +11,7 @@ namespace TuAdelanto.Models
         public string Token { get; set; }
         public DateTime FechaLimite { get; set; }
 
-        public String Correo { get; set; }
+        public String NombreUsuario { get; set; }
 
     }
 }

@@ -29,9 +29,9 @@ namespace TuAdelanto.Services
         Task<RespuestaBDModel> InhabilitarToken(string Authorization, int Id_Token = 0);
         object RefreshSession(string authorization, string refreshToken);
         Task<bool> EsActivoToken(string token);
-        RespuestaBDModel CrearTokenRecuperacion(string Correo);
+        RespuestaBDModel CrearTokenRecuperacion(string Nombre);
 
-        RespuestaBDModel CambiarContrasena(string Correo, string Contrasena);
+        RespuestaBDModel CambiarContrasena(string Nombre, string Contrasena);
 
         List<string> ValidarContrasena(string Contrasena);
         RespuestaBDModel ValidarToken(string Token);
@@ -51,6 +51,7 @@ namespace TuAdelanto.Services
         private List<Usuario> _usuarios = new List<Usuario>
         {
         };
+        private readonly ISMSService _sms;
         
 
         public UsuariosService(
@@ -59,7 +60,8 @@ namespace TuAdelanto.Services
             IDistributedCache cache,
             IHttpContextAccessor httpContextAccessor,
             IEmailService email_service,
-            IBaseDatosService databaseService
+            IBaseDatosService databaseService,
+            ISMSService _sms
         )
         {
             _appSettings = appSettings.Value as AppSettings;
@@ -67,6 +69,7 @@ namespace TuAdelanto.Services
             httpContext = h.HttpContext;
             _cache = cache;
             _databaseService = databaseService;
+            this._sms = _sms;
         }
 
 
@@ -81,11 +84,14 @@ namespace TuAdelanto.Services
             return res;
         }
 
-        public Usuario Authenticate(string Correo, string Contrasena)
+        public Usuario Authenticate(string Nombre, string Contrasena)
         {
             DataBase con = new DataBase(_appSettings);
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(Contrasena);
-            List<Usuario> lista_usuarios = _databaseService.consultarSp<Usuario>("Seguridad.SpUsuariosValidar", new { Correo });
+            List<Usuario> lista_usuarios = 
+                _databaseService.consultarSp<Usuario>("Seguridad.SpUsuariosValidar", new { 
+                    Nombre 
+            });
             Usuario usuario = null;
             if (lista_usuarios.Count > 0)
             {
@@ -109,7 +115,7 @@ namespace TuAdelanto.Services
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-                    new Claim(ClaimTypes.Name, usuario.Correo.ToString()),
+                    new Claim(ClaimTypes.Name, usuario.Nombre.ToString()),
                     new Claim(ClaimTypes.Role, usuario.Rol.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddHours(_appSettings.HorasExpiracion),
@@ -170,7 +176,7 @@ namespace TuAdelanto.Services
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-                    new Claim(ClaimTypes.Name, usuario.Correo.ToString()),
+                    new Claim(ClaimTypes.Name, usuario.Nombre.ToString()),
                     new Claim(ClaimTypes.Role, usuario.Rol.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddHours(_appSettings.HorasExpiracion),
@@ -191,7 +197,7 @@ namespace TuAdelanto.Services
 
         }
 
-        public RespuestaBDModel CrearTokenRecuperacion(string Correo)
+        public RespuestaBDModel CrearTokenRecuperacion(string Nombre)
         {
             DateTime fecha = DateTime.Now;
             fecha = fecha.AddMinutes(30);
@@ -200,16 +206,16 @@ namespace TuAdelanto.Services
             {
                 Token = token,
                 FechaLimite = fecha,
-                Correo = Correo
+                NombreUsuario = Nombre
             };
+            Empleado empleado = _databaseService.ejecutarSp<Empleado>("Seguridad.SpUsuariosValidar", new { 
+                Nombre
+            });
             DataBase con = new DataBase(_appSettings);
             RespuestaBDModel res = _databaseService.ejecutarSp<RespuestaBDModel>("Seguridad.SpRecuperacionContrasenasACT", rc);
             if (res.Exito)
             {
-                this._email_service.EnviarCorreo(Correo, "Reseteo de contraseña", $@"
-                    Para resetear la contraseña acceda al siguiente enlace
-                    <a href='http://localhost:4200/#/cambiar_contrasena/{token}'>http://localhost:4200/#/cambiar_contrasena/{token}<a>
-                ", true);
+                _sms.Enviar(empleado.Celular, "TITULO", "CUERPO");
             }
             return res;
         }

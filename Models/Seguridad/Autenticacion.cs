@@ -5,7 +5,7 @@ namespace TuAdelanto.Models
     public class AutenticacionModel
     {
         [Required]
-        public string Correo { get; set; }
+        public string Nombre { get; set; }
 
         [Required]
         public string Contrasena { get; set; }

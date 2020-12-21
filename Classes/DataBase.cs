@@ -49,8 +49,11 @@ namespace TuAdelanto.Classes
                 dataAdapterSearch.Fill(data);
                 dataAdapterSearch.Dispose();
             }
-            catch (Exception ex)
+            catch (SqlException ex)
             {
+                
+            }
+            catch (Exception ex) {
                 throw new Exception(ex.Message);
             }
             finally

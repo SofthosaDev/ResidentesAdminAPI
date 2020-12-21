@@ -13,7 +13,7 @@ using TuAdelanto.Services.Utilidades;
 
 namespace TuAdelanto.Controllers.Empleados
 {
-    [Authorize]
+    [AllowAnonymous]//[Authorize]
     [Route("[controller]")]
     public class EmpleadosController : Controller
     {
@@ -36,6 +36,7 @@ namespace TuAdelanto.Controllers.Empleados
             Guid _guid = Guid.Parse(guid);
             ArchivoTemporal archivo = this._archivos_service.BuscarArchivoTemporal(_guid);
             List<Empleado> lista = this._excel_service.ConvertirALista<Empleado>(archivo.RutaAbsoluta);
+            _archivos_service.EliminarArchivo(_guid);
             return lista;
         }
 
@@ -56,7 +57,6 @@ namespace TuAdelanto.Controllers.Empleados
 
         [HttpPost("AltaMasiva")]
         public IActionResult AltaEmpleadoMasivo([FromBody] List<Empleado> empleados) {
-            
             try {
                 string jsonEmpleados = JsonSerializer.Serialize(empleados);
                 RespuestaInsercionMasivaBDModel res = _base.ejecutarSp<RespuestaInsercionMasivaBDModel>(
@@ -67,6 +67,19 @@ namespace TuAdelanto.Controllers.Empleados
                 return Ok(res);
             }
             catch (Exception er) {
+                return BadRequest(er);
+            }
+        }
+
+        [HttpPost("Actualizar/{IdEmpleado}")]
+        public IActionResult Actualizar([FromBody] Empleado empleado, [FromRoute] int IdEmpleado) {
+            try
+            {
+                empleado.IdEmpleado = IdEmpleado;
+                RespuestaBDModel res = _base.ejecutarSp("SpEmpleadoACT", empleado);
+                return Ok(res);
+            }
+            catch(Exception er){
                 return BadRequest(er);
             }
         }

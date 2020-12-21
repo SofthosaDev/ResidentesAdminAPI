@@ -13,7 +13,7 @@ using TuAdelanto.Services.Utilidades;
 
 namespace TuAdelanto.Controllers.Empresas
 {
-    [Authorize]
+    [AllowAnonymous]//[Authorize]
     [Route("[controller]")]
     public class EmpresasController : Controller
     {

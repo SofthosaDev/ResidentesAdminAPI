@@ -23,6 +23,8 @@
         public int RefreshTokenMinutosVigencia { get; set; } = 0;
 
         public Correo Correo { get; set; }
+
+        public string GDriveKey { get; set; }
     }
 
 
