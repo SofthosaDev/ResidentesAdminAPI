@@ -51,7 +51,8 @@ namespace TuAdelanto.Classes
             }
             catch (SqlException ex)
             {
-                
+                throw new Exception(ex.Message);
+
             }
             catch (Exception ex) {
                 throw new Exception(ex.Message);

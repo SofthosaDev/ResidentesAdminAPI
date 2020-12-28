@@ -10,7 +10,7 @@ using TuAdelanto.Services;
 
 namespace TuAdelanto.Controllers.Usuarios
 {
-    [AllowAnonymous]//[Authorize]
+    [Authorize]//[AllowAnonymous]
     [Route("[controller]")]
     public class ConfirmacionController : Controller
     {

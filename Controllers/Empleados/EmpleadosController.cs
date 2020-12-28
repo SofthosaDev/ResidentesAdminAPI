@@ -13,7 +13,7 @@ using TuAdelanto.Services.Utilidades;
 
 namespace TuAdelanto.Controllers.Empleados
 {
-    [AllowAnonymous]//[Authorize]
+    [Authorize]//[AllowAnonymous]
     [Route("[controller]")]
     public class EmpleadosController : Controller
     {

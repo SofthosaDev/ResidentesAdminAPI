@@ -29,7 +29,10 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
 
         public Guid SubirArchivo(IFormFile Archivo);
 
-        public string SubirGoogleDrive(Guid guid);
+        public Task<string> SubirGoogleDrive(ArchivoTemporal archivo);
+
+        public Task<string> GetGoogleDriveMiniatura(string id);
+        public Task<Stream> GetGoogleDriveImagen(string id);
     }
     public class ArchivosService : IArchivosService
     {
@@ -89,7 +92,7 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
             }
             else
             {
-                throw (new Exception($@"El archivo con Id: {guid} no existe, 
+                throw (new DirectoryNotFoundException($@"El archivo con Id: {guid} no existe, 
                 tal ves ha pasado demasiado tiempo desde su creación, verifica"));
             }
             this.EliminarAntiguos();
@@ -212,10 +215,19 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
             return true;
         }
 
-        public string SubirGoogleDrive(Guid guid)
-        {
+        public async Task<string> GetGoogleDriveMiniatura(string id ) {
+            gdrive gd = new gdrive(_appSettings);
+            return await gd.GetMiniatura(id);
+        }
 
-            ArchivoTemporal archivo_temporal = BuscarArchivoTemporal(guid);
+        public async Task<Stream> GetGoogleDriveImagen(string id)
+        {
+            gdrive gd = new gdrive(_appSettings);
+            return await gd.GetCompleto(id);
+        }
+
+        public async Task<string> SubirGoogleDrive(ArchivoTemporal archivo_temporal)
+        {
             string ruta = archivo_temporal.RutaAbsoluta;
             string link = "";
             if (File.Exists(ruta))
@@ -223,7 +235,7 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
                 string mime =  MimeTypes.Core.MimeTypeMap.GetMimeType(archivo_temporal.Extension);
                 gdrive gd = new gdrive(_appSettings);
                 using (var stream = new System.IO.FileStream( ruta, System.IO.FileMode.Open)) {
-                    link = gd.SubirArchivo(stream, archivo_temporal.Nombre, mime);
+                    link = await gd.SubirArchivo(stream, archivo_temporal.Nombre, mime);
                 }
                     
                 return link;
@@ -231,7 +243,7 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
             }
             else
             {
-                throw (new Exception($@"El archiasdvo con Id: {guid} no existe, 
+                throw (new Exception($@"El archivo con Id: {archivo_temporal.guid} no existe, 
                 tal ves ha pasado demasiado tiempo desde su creación, verifica"));
             }
             EliminarAntiguos();
