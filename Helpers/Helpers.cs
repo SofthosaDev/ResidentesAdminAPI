@@ -10,6 +10,7 @@ public static class CodigoErrores {
     public static readonly string USUARIO_NUEVO = "02";
     public static readonly string USUARIO_BLOQUEADO = "03";
     public static readonly string REFRESH_TOKEN_INCORRECTO = "04";
+    public static readonly string DATOS_EMPLEADO_INCOMPLETOS = "05";
     public static readonly string ERROR_GENERICO = "99";
 }
 public static class Helpers

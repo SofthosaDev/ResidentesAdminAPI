@@ -41,9 +41,10 @@ namespace TuAdelanto.Controllers.Empleados
         }
 
         [HttpPost("Alta")]
-        [AllowAnonymous]
         public IActionResult AltaIndividual([FromBody] Empleado empleado) {
             try {
+                if (empleado == null)
+                    throw new Exception("Empleado requerido");
                 RespuestaInsercionBDModel res = _base.ejecutarSp<RespuestaInsercionBDModel>("Adelantos.SpEmpleadoALT",
                     empleado
                 );

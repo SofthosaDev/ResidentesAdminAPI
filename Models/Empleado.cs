@@ -14,7 +14,6 @@ namespace TuAdelanto.Models
         public string ApellidoPaterno { get; set; }
         public string ApellidoMaterno { get; set; }
         public DateTime FechaIngreso { get; set; }
-        public DateTime FechaFinContrato { get; set; }
         public DateTime FechaNacimiento { get; set; }
         public string RFC { get; set; } = "";
         public string CURP { get; set; } = "";
@@ -27,16 +26,17 @@ namespace TuAdelanto.Models
         public string Estado { get; set; } = "";
         public string CP { get; set; } = "";
         public string Celular { get; set; }
-        public string Nombre { get; set; } = "";
         public string Puesto { get; set; } = "";
         public int CorteId { get; set; }
         public decimal IngresoNeto { get; set; } = 0;
         public decimal LimiteCredito { get; set; } = 0;
         public string NumEmpleado { get; set; }
+        public string Correo { get; set; }
     }
 
     public class ConfirmacionCelular { 
-        public int IdEmpleado { get; set; }
+        public string Celular { get; set; }
         public string CodigoConfirmacion { get; set; }
+        public string Contrasena { get; set; }
     }
 }
