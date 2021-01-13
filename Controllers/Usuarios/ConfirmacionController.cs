@@ -16,10 +16,12 @@ namespace TuAdelanto.Controllers.Usuarios
     {
         public readonly IBaseDatosService _base;
         public readonly ISMSService _sms;
+        private readonly IUsuarioService _usuario;
 
-        public ConfirmacionController(IBaseDatosService _base, ISMSService _sms) {
+        public ConfirmacionController(IBaseDatosService _base, ISMSService _sms, IUsuarioService _usuario) {
             this._base = _base;
             this._sms = _sms;
+            this._usuario = _usuario;
         }
 
         /// <summary>
@@ -30,6 +32,7 @@ namespace TuAdelanto.Controllers.Usuarios
         /// <param name="IdEmpleado"></param>
         /// <returns></returns>
         [HttpGet("TieneInformacionCompleta/{IdEmpleado}")]
+        [Authorize(Policy = "AccesoTemporal")]
         public IActionResult TieneInformacionCompleta([FromRoute] int IdEmpleado) {
             RespuestaBDModel res = _base.ejecutarSp("Adelantos.SpEmpleadoTieneDatosCompletos", new { IdEmpleado });
             return Ok(res);
@@ -50,9 +53,6 @@ namespace TuAdelanto.Controllers.Usuarios
             try {
                 Guid guid = Guid.NewGuid();
                 string Codigo = guid.ToString().Substring(0, 5);
-
-
-
                 List<Empleado> lista = _base.consultarSp<Empleado>(
                     "Seguridad.SpUsuariosValidar",
                     new { Nombre = Celular });
@@ -60,13 +60,6 @@ namespace TuAdelanto.Controllers.Usuarios
                 if (lista.Count > 0) {
                     empleado = lista.First();
                 }
-
-                //RespuestaBDModel resEmp = _base.ejecutarSp("Adelantos.SpEmpleadoTieneDatosCompletos",
-                //    new { empleado.IdEmpleado });
-                //if (!resEmp.Exito) {
-                //    resEmp.Codigo = CodigoErrores.DATOS_EMPLEADO_INCOMPLETOS;
-                //    return Ok(resEmp);
-                //}
 
                 RespuestaActualizacionBDModel res = _base.ejecutarSp<RespuestaActualizacionBDModel>(
                     "Adelantos.SpEmpleadoCodigoConfirmacionACT", 
@@ -92,6 +85,7 @@ namespace TuAdelanto.Controllers.Usuarios
                 return BadRequest(er.Message);
             }
         }
+
         /// <summary>
         /// El usuario envía el código celular a confirmar, este se compara con el almacenado en la base de datos
         /// en caso de ser correcto, marca el registro del empleado como "confirmado"
@@ -117,13 +111,22 @@ namespace TuAdelanto.Controllers.Usuarios
                     conf.Celular,
                     conf.CodigoConfirmacion
                 });
+                string token = "";
                 if (res.Exito) {
-                    res = _base.ejecutarSp<RespuestaBDModel>("Adelantos.SpConfirmarUsuarioPROC", new { 
-                        empleado.IdEmpleado,
-                        Contrasena = BCrypt.Net.BCrypt.HashPassword(conf.Contrasena)
-                });
+                    res = _base.ejecutarSp<RespuestaBDModel>("Adelantos.SpConfirmarUsuarioPROC", new {
+                        empleado.IdEmpleado
+                        //Contrasena = BCrypt.Net.BCrypt.HashPassword(conf.Contrasena)
+                    });
+                    token = _usuario.GenerarTokenTemporal(conf.Celular);
+
+
                 }
-                return Ok(res);
+                return Ok(new {
+                    res.Exito,
+                    res.Codigo,
+                    res.Mensaje,
+                    token
+                });
             }
             catch (Exception er) {
                 return BadRequest(er.Message);

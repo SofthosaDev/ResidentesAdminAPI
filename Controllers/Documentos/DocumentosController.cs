@@ -16,6 +16,7 @@ namespace TuAdelanto.Controllers.Documentos
 {
     [Authorize]//[AllowAnonymous]
     [Route("[controller]")]
+    [Authorize(Policy = "AccesoTemporal")]
     public class DocumentosController : Controller
     {
         private readonly IArchivosService _archivos_service;

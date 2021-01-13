@@ -24,6 +24,8 @@ namespace TuAdelanto.Models
         public string EstatusClave { get; set; }
         public bool EsNuevo { get; set; }
 
+        public string CodigoCelular { get; set; }
+
         //public string ClaveRol { get; set; }
         //public string Rol { get; set; }
 

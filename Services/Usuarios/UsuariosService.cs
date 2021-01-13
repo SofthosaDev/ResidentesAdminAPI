@@ -23,6 +23,7 @@ namespace TuAdelanto.Services
     public interface IUsuarioService
     {
         Usuario Authenticate(string token, string contrasena);
+        string GenerarTokenTemporal(string nombre);
         IEnumerable<Usuario> GetAll();
 
         Usuario Insertar(Usuario usuario);
@@ -84,10 +85,40 @@ namespace TuAdelanto.Services
             return res;
         }
 
+        public string GenerarTokenTemporal(string Nombre) {
+            List<Usuario> lista_usuarios = _databaseService.consultarSp<Usuario>("Seguridad.SpUsuariosValidar", new {Nombre});
+            Usuario usuario = null;
+            if (lista_usuarios.Count > 0)
+            {
+                usuario = lista_usuarios[0];
+            }
+            if (usuario == null)
+                return null;
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+                    new Claim(ClaimTypes.Name, usuario.Nombre.ToString()),
+                    new Claim(ClaimTypes.Role, "Registro")
+                }),
+                Expires = DateTime.UtcNow.AddHours(_appSettings.HorasExpiracion),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            string refreshToken = Guid.NewGuid().ToString();
+            usuario.Token = tokenHandler.WriteToken(token);
+            usuario.RefreshToken = refreshToken;
+            AgregarToken(usuario.IdUsuario, usuario.Token, usuario.RefreshToken);
+            return usuario.Token;
+        }
+
         public Usuario Authenticate(string Nombre, string Contrasena)
         {
-            DataBase con = new DataBase(_appSettings);
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(Contrasena);
+            //DataBase con = new DataBase(_appSettings);
+            //string passwordHash = BCrypt.Net.BCrypt.HashPassword(Contrasena);
             List<Usuario> lista_usuarios = 
                 _databaseService.consultarSp<Usuario>("Seguridad.SpUsuariosValidar", new { 
                     Nombre 

@@ -15,6 +15,7 @@ namespace TuAdelanto.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]//[AllowAnonymous]
+    [Authorize(Policy = "UsuarioApp")]
     public class UsuariosController : ControllerBase
     {
         private IUsuarioService _userService;
@@ -42,7 +43,6 @@ namespace TuAdelanto.Controllers
         public IActionResult Authenticate([FromBody]AutenticacionModel modelo)
         {
             Usuario user = _userService.Authenticate(modelo.Nombre, modelo.Contrasena);
-
             if (user == null)
                 return BadRequest(new
                 {

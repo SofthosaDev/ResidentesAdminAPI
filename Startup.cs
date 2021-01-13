@@ -20,6 +20,8 @@ using TuAdelanto.Helpers;
 using Microsoft.OpenApi.Models;
 using EvaluadorFinancieraWS.Services.Cobranza.Utilidades;
 using EvaluadorFinancieraWS.Services.Utilidades;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TuAdelanto
 {
@@ -73,6 +75,34 @@ namespace TuAdelanto
 
         public void AgregarAutenticacion(IServiceCollection services)
         {
+            services.AddAuthorization(options =>
+            {
+                //Usuario App
+                ///TODO
+                ///Buscar como agregar una poliza "DEFUALT"
+                options.AddPolicy("",
+                     policy => {
+                         policy.RequireAssertion(context =>
+                         {
+                             string roles = context.User.FindFirstValue(ClaimTypes.Role);
+                             return (roles == "UsuarioApp");
+                         });
+                     }
+                );
+
+                options.AddPolicy("AccesoTemporal",
+                     policy => {
+                         policy.RequireAssertion(context =>
+                         {
+                             string roles = context.User.FindFirstValue(ClaimTypes.Role);
+                             return (roles == "Registro");
+                         });
+                     }
+                );
+
+
+            });
+
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

@@ -18,6 +18,7 @@ namespace TuAdelanto.Controllers
     [AllowAnonymous]
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Policy = "UsuarioApp")]
     public class ArchivosController : ControllerBase
     {
         private IArchivosService _service;
