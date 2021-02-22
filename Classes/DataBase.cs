@@ -5,9 +5,7 @@ using System.Xml;
 using System.Data.SqlTypes;
 using TuAdelanto.Helpers;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Options;
 using TuAdelanto.Models;
 
 namespace TuAdelanto.Classes

@@ -13,6 +13,7 @@ using TuAdelanto.Services.Utilidades;
 
 namespace TuAdelanto.Controllers.Empleados
 {
+    //MOVER ESTO A UN API DE ADMINISTRADOR
     [Authorize]//[AllowAnonymous]
     [Route("[controller]")]
     public class EmpleadosController : Controller
@@ -34,8 +35,8 @@ namespace TuAdelanto.Controllers.Empleados
         public List<Empleado> GetElementosExcel(string guid)
         {
             Guid _guid = Guid.Parse(guid);
-            ArchivoTemporal archivo = this._archivos_service.BuscarArchivoTemporal(_guid);
-            List<Empleado> lista = this._excel_service.ConvertirALista<Empleado>(archivo.RutaAbsoluta);
+            ArchivoTemporal archivo = _archivos_service.BuscarArchivoTemporal(_guid);
+            List<Empleado> lista = _excel_service.ConvertirALista<Empleado>(archivo.RutaAbsoluta);
             _archivos_service.EliminarArchivo(_guid);
             return lista;
         }
@@ -56,9 +57,16 @@ namespace TuAdelanto.Controllers.Empleados
 
         }
 
-        [HttpPost("AltaMasiva")]
-        public IActionResult AltaEmpleadoMasivo([FromBody] List<Empleado> empleados) {
-            try {
+        [HttpPost("AltaMasiva/{EmpresaId}")]
+        public IActionResult AltaEmpleadoMasivo([FromBody] List<Empleado> empleados, [FromRoute] int EmpresaId ) {
+            try
+            {
+                if (EmpresaId <= 0) {
+                    throw new ArgumentNullException("El parámetro de empresa es requerido, envíalo en el url, ejemplo: AltaMasiva/1");
+                }
+                for (int i = 0; i < empleados.Count(); i++) {
+                    empleados.ElementAt(i).EmpresaId = EmpresaId;
+                }
                 string jsonEmpleados = JsonSerializer.Serialize(empleados);
                 RespuestaInsercionMasivaBDModel res = _base.ejecutarSp<RespuestaInsercionMasivaBDModel>(
                 "Adelantos.SpEmpleadosMasivoALT", new
@@ -67,9 +75,18 @@ namespace TuAdelanto.Controllers.Empleados
                 });
                 return Ok(res);
             }
-            catch (Exception er) {
+            catch (ArgumentNullException er)
+            {
+                return Ok(new RespuestaInsercionBDModel() { 
+                    Exito = false,
+                    Mensaje = er.Message
+                });
+            }
+            catch (Exception er)
+            {
                 return BadRequest(er);
             }
+            
         }
 
         [HttpPost("Actualizar/{IdEmpleado}")]

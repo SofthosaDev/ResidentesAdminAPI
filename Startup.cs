@@ -36,7 +36,7 @@ namespace TuAdelanto
             }
             else
             {
-                json_path = "appsettings.json";
+                json_path = "appsettings.Development.json";
             }
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
@@ -51,7 +51,6 @@ namespace TuAdelanto
 
        public void ConfigureServices(IServiceCollection services)
         {
-
             AgregarAutenticacion(services);
             ConfigurarSwagger(services);
             ConfigurarSqlite(services);
@@ -75,33 +74,16 @@ namespace TuAdelanto
 
         public void AgregarAutenticacion(IServiceCollection services)
         {
-            services.AddAuthorization(options =>
-            {
-                //Usuario App
-                ///TODO
-                ///Buscar como agregar una poliza "DEFUALT"
-                options.AddPolicy("",
-                     policy => {
-                         policy.RequireAssertion(context =>
-                         {
-                             string roles = context.User.FindFirstValue(ClaimTypes.Role);
-                             return (roles == "UsuarioApp");
-                         });
-                     }
-                );
-
-                options.AddPolicy("AccesoTemporal",
-                     policy => {
-                         policy.RequireAssertion(context =>
-                         {
-                             string roles = context.User.FindFirstValue(ClaimTypes.Role);
-                             return (roles == "Registro");
-                         });
-                     }
-                );
-
-
-            });
+            //services.AddAuthorization(options =>
+            //{
+            //    options.AddPolicy("AccesoTemporal",
+            //         policy =>
+            //         {
+            //             policy.RequireAuthenticatedUser();
+            //             policy.RequireRole("Registro");
+            //         }
+            //    );
+            //});
 
             services.AddAuthentication(x =>
             {
@@ -116,6 +98,18 @@ namespace TuAdelanto
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["AppSettings:Secret"])),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
+            })
+            .AddJwtBearer("Temporal", x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["AppSettings:CredencialTemporal:Secret"])),
                     ValidateIssuer = false,
                     ValidateAudience = false
                 };

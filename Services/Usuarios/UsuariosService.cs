@@ -22,6 +22,7 @@ namespace TuAdelanto.Services
 {
     public interface IUsuarioService
     {
+        string Encriptar(string Contrasena);
         Usuario Authenticate(string token, string contrasena);
         string GenerarTokenTemporal(string nombre);
         IEnumerable<Usuario> GetAll();
@@ -95,23 +96,21 @@ namespace TuAdelanto.Services
             if (usuario == null)
                 return null;
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+            var key = Encoding.ASCII.GetBytes(_appSettings.CredencialTemporal.Secret);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-                    new Claim(ClaimTypes.Name, usuario.Nombre.ToString()),
-                    new Claim(ClaimTypes.Role, "Registro")
+                    new Claim(ClaimTypes.Name, usuario.Nombre.ToString())
                 }),
-                Expires = DateTime.UtcNow.AddHours(_appSettings.HorasExpiracion),
+                Expires = DateTime.UtcNow.AddHours(_appSettings.CredencialTemporal.MinutosExpiracion),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
+            
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            string refreshToken = Guid.NewGuid().ToString();
             usuario.Token = tokenHandler.WriteToken(token);
-            usuario.RefreshToken = refreshToken;
-            AgregarToken(usuario.IdUsuario, usuario.Token, usuario.RefreshToken);
+            AgregarToken(usuario.IdUsuario, usuario.Token, "");
             return usuario.Token;
         }
 
@@ -210,14 +209,16 @@ namespace TuAdelanto.Services
                     new Claim(ClaimTypes.Name, usuario.Nombre.ToString()),
                     new Claim(ClaimTypes.Role, usuario.Rol.ToString())
                 }),
+                
                 Expires = DateTime.UtcNow.AddHours(_appSettings.HorasExpiracion),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
+            
             var token = tokenHandler.CreateToken(tokenDescriptor);
             string nuevo_refreshToken = Guid.NewGuid().ToString();
             usuario.Token = tokenHandler.WriteToken(token);
             usuario.RefreshToken = nuevo_refreshToken;
-            this.AgregarToken(usuario.IdUsuario, usuario.Token, nuevo_refreshToken, RefreshToken);
+            AgregarToken(usuario.IdUsuario, usuario.Token, nuevo_refreshToken, RefreshToken);
             return usuario.WithoutPassword();
         }
 
@@ -269,6 +270,10 @@ namespace TuAdelanto.Services
             return res;
         }
 
+        public string Encriptar(string Contrasena) {
+            Contrasena = BCrypt.Net.BCrypt.HashPassword(Contrasena);
+            return Contrasena;
+        }
         public List<string> ValidarContrasena(string contrasena)
         {
             List<string> errores = new List<string>();

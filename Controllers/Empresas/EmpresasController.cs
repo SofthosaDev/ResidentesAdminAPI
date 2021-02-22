@@ -13,8 +13,8 @@ using TuAdelanto.Services.Utilidades;
 
 namespace TuAdelanto.Controllers.Empresas
 {
-    [Authorize]//[AllowAnonymous]
     [Route("[controller]")]
+    [Authorize]
     public class EmpresasController : Controller
     {
         private readonly IExcelService _excel_service;

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using EvaluadorFinancieraWS.Services.Cobranza.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PerrosApp.Models.Empleado;
 using TuAdelanto.Models;
 using TuAdelanto.Services;
 
@@ -24,17 +26,50 @@ namespace TuAdelanto.Controllers.Usuarios
             this._usuario = _usuario;
         }
 
+        ///pendientes:
+        ///Mover esto al solicitar adelanto, para asegurar que el empleado no deje sin crear su usuario
         /// <summary>
         /// Verifica si el usuario tiene la información requerida completa, retorna un objeto con la propiedad
         /// Exito = True cuando la información necesaria está completa
         /// Exito = False cuando la información aún está pendiente
-        /// </summary>
-        /// <param name="IdEmpleado"></param>
-        /// <returns></returns>
-        [HttpGet("TieneInformacionCompleta/{IdEmpleado}")]
-        [Authorize(Policy = "AccesoTemporal")]
-        public IActionResult TieneInformacionCompleta([FromRoute] int IdEmpleado) {
-            RespuestaBDModel res = _base.ejecutarSp("Adelantos.SpEmpleadoTieneDatosCompletos", new { IdEmpleado });
+        [HttpGet("TieneInformacionCompleta")]
+        [Authorize(AuthenticationSchemes ="Temporal")]
+        public IActionResult TieneInformacionCompleta() {
+            RespuestaBDModel res = _base.ejecutarSp("Adelantos.SpEmpleadoTieneDatosCompletos", new { });
+            return Ok(res);
+        }
+
+        /// <summary>
+        /// Actualiza la informacion del empleado mediante el token temporal
+        [HttpPost("ActualizarDatos")]
+        [Authorize(AuthenticationSchemes = "Temporal")]
+        public IActionResult ActualizarDatos([FromBody] EmpleadoDatos datos)
+        {
+            RespuestaBDModel res = _base.ejecutarSp("Adelantos.SpEmpleadoDatosACT", datos);
+            return Ok(res);
+        }
+
+        /// <summary>
+        /// Actualiza la informacion del empleado mediante el token temporal
+        [HttpPost("SetearContrasena")]
+        [Authorize(AuthenticationSchemes = "Temporal")]
+        public IActionResult SetearContrasena([FromBody] string contrasena)
+        {
+            if (contrasena == null) {
+                throw new ArgumentNullException(nameof(contrasena));
+            }
+            List<string> errores = _usuario.ValidarContrasena(contrasena);
+            if (errores.Count > 0) {
+                return Ok(new { 
+                        Exito = false,
+                        Mensaje ="La contraseña no cumple con los requisitos de seguridad",
+                        Errores = errores
+                });
+            }
+            contrasena = _usuario.Encriptar(contrasena);
+            RespuestaBDModel res = _base.ejecutarSp("Adelantos.SpEmpleadoContrasenaACT", new {
+                Contrasena = contrasena
+            });
             return Ok(res);
         }
 
@@ -52,7 +87,10 @@ namespace TuAdelanto.Controllers.Usuarios
         public async Task<IActionResult> GenerarCodigo(string Celular) {
             try {
                 Guid guid = Guid.NewGuid();
-                string Codigo = guid.ToString().Substring(0, 5);
+                BigInteger bigInt = new BigInteger(guid.ToByteArray());
+                string Codigo = bigInt.ToString().Replace("-",""); ;
+                Codigo = Codigo.ToString().Substring(0, 5);
+
                 List<Empleado> lista = _base.consultarSp<Empleado>(
                     "Seguridad.SpUsuariosValidar",
                     new { Nombre = Celular });
@@ -115,7 +153,6 @@ namespace TuAdelanto.Controllers.Usuarios
                 if (res.Exito) {
                     res = _base.ejecutarSp<RespuestaBDModel>("Adelantos.SpConfirmarUsuarioPROC", new {
                         empleado.IdEmpleado
-                        //Contrasena = BCrypt.Net.BCrypt.HashPassword(conf.Contrasena)
                     });
                     token = _usuario.GenerarTokenTemporal(conf.Celular);
 

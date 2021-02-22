@@ -8,6 +8,11 @@
         public string password { get; set; }
         public bool enableSsl { get; set; }
     }
+
+    public class CredencialTemporal { 
+        public string Secret { get; set; }
+        public double MinutosExpiracion { get; set; }
+    }
     public class AppSettings
     {
         public string Secret { get; set; }
@@ -25,6 +30,8 @@
         public Correo Correo { get; set; }
 
         public string GDriveKey { get; set; }
+
+        public CredencialTemporal CredencialTemporal { get; set; }
     }
 
 
