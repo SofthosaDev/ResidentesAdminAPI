@@ -1,4 +1,4 @@
-﻿using TuAdelanto.Helpers;
+﻿using WsAdminResidentes.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -8,9 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Data.SQLite;
-using TuAdelanto.Models.Utilidades;
-using TuAdelanto.Services.Utilidades;
-using PerrosApp.Classes;
+using WsAdminResidentes.Models.Utilidades;
+using WsAdminResidentes.Services.Utilidades;
+using WsAdminResidentes.Classes;
+using EvaluadorFinancieraWS.Services.Cobranza.Utilidades;
+using WsAdminResidentes.Models.RespuestasBd;
 
 namespace EvaluadorFinancieraWS.Services.Utilidades
 {
@@ -29,10 +31,13 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
 
         public Guid SubirArchivo(IFormFile Archivo);
 
-        public Task<string> SubirGoogleDrive(ArchivoTemporal archivo);
+        public Task<ArchivoBdModel> SubirGoogleDrive(ArchivoTemporal archivo);
 
         public Task<string> GetGoogleDriveMiniatura(string id);
         public Task<Stream> GetGoogleDriveImagen(string id);
+        public ArchivoBdModel GetArchivoBd(int id);
+        public byte[] StreamToByteArray(Stream stream);
+        public void AgregarFormato(string formato);
     }
     public class ArchivosService : IArchivosService
     {
@@ -43,23 +48,21 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
         private const double mb = 1048576;
         private readonly SqliteContext SqliteContext;
         public List<string> Formatos;
+        private readonly IBaseDatosService _db;
 
-        public ArchivosService(IOptions<AppSettings> appSettings, int tamano_maximo = 50/*MB*/)
+        public ArchivosService(IBaseDatosService _db, IOptions<AppSettings> appSettings, int tamano_maximo = 50/*MB*/ )
         {
+            this._db = _db;
             _appSettings = appSettings.Value as AppSettings;
             tamanoMaximo = 50 * mb;
             _dbContext = new SqliteContext(appSettings);
             SqliteContext = new SqliteContext(appSettings);
             Formatos = new List<string>();
-            Formatos.Add("png");
-            Formatos.Add("jpeg");
-            Formatos.Add("jpg");
-            Formatos.Add("gif");
         }
 
         public void EliminarAntiguos()
         {
-            List<ArchivoTemporal> archivos_temporales = this.BuscarAntiguos();
+            List<ArchivoTemporal> archivos_temporales = BuscarAntiguos();
             foreach (ArchivoTemporal archivo_temporal in archivos_temporales)
             {
                 EliminarArchivo(archivo_temporal.guid);
@@ -75,8 +78,8 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
                     Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{carpeta_destino}")
                 );
             }
-            string temp = System.IO.Path.GetRandomFileName();
-            ArchivoTemporal archivo_temporal = this.BuscarArchivoTemporal(guid);
+            string temp = Path.GetRandomFileName();
+            ArchivoTemporal archivo_temporal = BuscarArchivoTemporal(guid);
             destino_relativo = $"{carpeta_destino}/{temp}{archivo_temporal.Extension}";
             string ruta_absoluta_dest = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
                 destino_relativo
@@ -95,7 +98,7 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
                 throw (new DirectoryNotFoundException($@"El archivo con Id: {guid} no existe, 
                 tal ves ha pasado demasiado tiempo desde su creación, verifica"));
             }
-            this.EliminarAntiguos();
+            EliminarAntiguos();
             return destino_relativo;
         }
 
@@ -119,6 +122,9 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
             string archivo_nombre = Archivo.FileName;
             string nombre_aleatorio = System.IO.Path.GetRandomFileName();
             string extension = Path.GetExtension(archivo_nombre);
+            if (!Formatos.Contains(extension.Replace(".", ""))) {
+                throw new Exception("Extensión inválida");
+            }
             ValidarFormato(archivo_nombre);
             string nombre_aleatorio_ext = $"{nombre_aleatorio}{extension}";
             string ruta_relativa = Path.Combine(this._appSettings.RutaArchivos, nombre_aleatorio_ext);
@@ -188,7 +194,7 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
             SqliteContext.ArchivosTemporales.Add(archivo_temporal);
             SqliteContext.SaveChanges();
         }
-        private string ObtenerRuta(string uuid)
+        public string ObtenerRuta(string uuid)
         {
             string ruta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _appSettings.RutaArchivos);
             return $"{ruta}/${uuid}";
@@ -226,7 +232,9 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
             return await gd.GetCompleto(id);
         }
 
-        public async Task<string> SubirGoogleDrive(ArchivoTemporal archivo_temporal)
+
+
+        public async Task<ArchivoBdModel> SubirGoogleDrive(ArchivoTemporal archivo_temporal)
         {
             string ruta = archivo_temporal.RutaAbsoluta;
             string link = "";
@@ -234,19 +242,67 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
             {
                 string mime =  MimeTypes.Core.MimeTypeMap.GetMimeType(archivo_temporal.Extension);
                 gdrive gd = new gdrive(_appSettings);
+                long tamano = 0;
                 using (var stream = new System.IO.FileStream( ruta, System.IO.FileMode.Open)) {
                     link = await gd.SubirArchivo(stream, archivo_temporal.Nombre, mime);
+                    tamano = stream.Length;
                 }
-                    
-                return link;
-
+                ArchivoBdModel archivo = new ArchivoBdModel()
+                {
+                    IdArchivo = 0,
+                    Ruta = link,
+                    Nombre = archivo_temporal.Nombre,
+                    Extension = archivo_temporal.Extension,
+                    Tamano = tamano,
+                    EnGoogleDrive = true
+                };
+                RespuestaInsercion res = _db.ejecutarSp<RespuestaInsercion>("Utilidades.SpArchivosACT", archivo);
+                archivo.IdArchivo = res.Id;
+                return archivo;
             }
             else
             {
                 throw (new Exception($@"El archivo con Id: {archivo_temporal.guid} no existe, 
                 tal ves ha pasado demasiado tiempo desde su creación, verifica"));
             }
+           
+           //EliminarArchivo(archivo_temporal.guid);
             EliminarAntiguos();
+        }
+
+        public ArchivoBdModel GetArchivoBd(int IdAvatar)
+        {
+            ArchivoBdModel res = _db.consultarSp<ArchivoBdModel>("Seguridad.SpUsuarioAvatarCON", new
+            {
+                IdAvatar
+            }).FirstOrDefault();
+            if (res == null) {
+                throw new KeyNotFoundException();
+            }
+            return res;
+        }
+
+        public byte[] StreamToByteArray(Stream input)
+        {
+            byte[] total_stream= new byte[0];
+            byte[] stream_array = new byte[0];
+            // Setup whatever read size you want (small here for testing)
+            byte[] buffer = new byte[32];// * 1024];
+            int read = 0;
+
+            while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                stream_array = new byte[total_stream.Length + read];
+                total_stream.CopyTo(stream_array, 0);
+                Array.Copy(buffer, 0, stream_array, total_stream.Length, read);
+                total_stream = stream_array;
+            }
+            return total_stream;
+        }
+
+        public void AgregarFormato(string formato)
+        {
+            this.Formatos.Add(formato);
         }
     }
 }

@@ -4,39 +4,40 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using TuAdelanto.Classes;
+using WsAdminResidentes.Classes;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using TuAdelanto.Models;
-using TuAdelanto.Helpers;
+using WsAdminResidentes.Models;
+using WsAdminResidentes.Helpers;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Threading.Tasks;
-using TuAdelanto.Services.Utilidades;
+using WsAdminResidentes.Services.Utilidades;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Security.Cryptography;
 using EvaluadorFinancieraWS.Services.Cobranza.Utilidades;
+using WsAdminResidentes.Models.RespuestasBd;
 
-namespace TuAdelanto.Services
+namespace WsAdminResidentes.Services
 {
     public interface IUsuarioService
     {
         string Encriptar(string Contrasena);
-        Usuario Authenticate(string token, string contrasena);
+        Usuario Authenticate(string Nombre, string Contrasena);
         string GenerarTokenTemporal(string nombre);
         IEnumerable<Usuario> GetAll();
 
         Usuario Insertar(Usuario usuario);
-        Task<RespuestaBDModel> InhabilitarToken(string Authorization, int Id_Token = 0);
+        Task<RespuestaBase> InhabilitarToken(string Authorization, int Id_Token = 0);
         object RefreshSession(string authorization, string refreshToken);
         Task<bool> EsActivoToken(string token);
-        RespuestaBDModel CrearTokenRecuperacion(string Nombre);
+        RespuestaToken CrearTokenRecuperacion(string Nombre);
 
-        RespuestaBDModel CambiarContrasena(string Nombre, string Contrasena);
+        RespuestaBase CambiarContrasena(string Nombre, string Contrasena);
 
         List<string> ValidarContrasena(string Contrasena);
-        RespuestaBDModel ValidarToken(string Token);
+        RespuestaBase ValidarToken(string Token);
 
     }
 
@@ -75,7 +76,7 @@ namespace TuAdelanto.Services
         }
 
 
-        public async Task<RespuestaBDModel> InhabilitarToken(string Token, int Id_Token = 0)
+        public async Task<RespuestaBase> InhabilitarToken(string Token, int Id_Token = 0)
         {
             DataBase con = new DataBase(_appSettings);
             RespuestaBDToken res = _databaseService.ejecutarSp<RespuestaBDToken>("Seguridad.SpUsuarioCerrarSesion", new { Token });
@@ -86,8 +87,8 @@ namespace TuAdelanto.Services
             return res;
         }
 
-        public string GenerarTokenTemporal(string Nombre) {
-            List<Usuario> lista_usuarios = _databaseService.consultarSp<Usuario>("Seguridad.SpUsuariosValidar", new {Nombre});
+        public string GenerarTokenTemporal(string Celular) {
+            List<Usuario> lista_usuarios = _databaseService.consultarSp<Usuario>("Seguridad.SpUsuarioConsultar", new {Celular});
             Usuario usuario = null;
             if (lista_usuarios.Count > 0)
             {
@@ -117,10 +118,10 @@ namespace TuAdelanto.Services
         public Usuario Authenticate(string Nombre, string Contrasena)
         {
             //DataBase con = new DataBase(_appSettings);
-            //string passwordHash = BCrypt.Net.BCrypt.HashPassword(Contrasena);
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(Contrasena);
             List<Usuario> lista_usuarios = 
-                _databaseService.consultarSp<Usuario>("Seguridad.SpUsuariosValidar", new { 
-                    Nombre 
+                _databaseService.consultarSp<Usuario>("Seguridad.SpUsuarioConsultar", new { 
+                    Nombre
             });
             Usuario usuario = null;
             if (lista_usuarios.Count > 0)
@@ -165,7 +166,7 @@ namespace TuAdelanto.Services
         {
             DataBase con = new DataBase(_appSettings);
             int minutos = _appSettings.RefreshTokenMinutosVigencia;
-            RespuestaBDModel res = _databaseService.ejecutarSp<RespuestaBDModel>("Seguridad.SpUsuarioTokenALT", new
+            RespuestaBase res = _databaseService.ejecutarSp<RespuestaBase>("Seguridad.SpUsuarioTokenALT", new
             {
                 IdUsuario,
                 Token,
@@ -226,10 +227,9 @@ namespace TuAdelanto.Services
         {
             string valor = await _cache.GetStringAsync($"{token}:deactive");
             return valor == null;
-
         }
 
-        public RespuestaBDModel CrearTokenRecuperacion(string Nombre)
+        public RespuestaToken CrearTokenRecuperacion(string Nombre)
         {
             DateTime fecha = DateTime.Now;
             fecha = fecha.AddMinutes(30);
@@ -240,29 +240,37 @@ namespace TuAdelanto.Services
                 FechaLimite = fecha,
                 NombreUsuario = Nombre
             };
-            Empleado empleado = _databaseService.ejecutarSp<Empleado>("Seguridad.SpUsuariosValidar", new { 
-                Nombre
+            Usuario usuario = _databaseService.ejecutarSp<Usuario>("Seguridad.SpUsuarioConsultar", new { 
+                    Nombre
             });
-            DataBase con = new DataBase(_appSettings);
-            RespuestaBDModel res = _databaseService.ejecutarSp<RespuestaBDModel>("Seguridad.SpRecuperacionContrasenasACT", rc);
-            if (res.Exito)
+
+            if (usuario.EstatusClave != "01")
             {
-                _sms.Enviar(empleado.Celular, "TITULO", "CUERPO");
+                return new RespuestaToken()
+                {
+                    Exito = false,
+                    Mensaje = "No se puede realizar la acción"
+                };
             }
+
+            DataBase con = new DataBase(_appSettings);
+            RespuestaToken res = _databaseService.ejecutarSp<RespuestaToken>("Seguridad.SpRecuperacionContrasenasACT", rc);
+            res.Token = token;
             return res;
         }
 
-        public RespuestaBDModel ValidarToken(string Token)
+        public RespuestaBase ValidarToken(string Token)
         {
             DataBase con = new DataBase(_appSettings);
-            RespuestaBDModel res = _databaseService.ejecutarSp<RespuestaBDModel>("Seguridad.SpContrasenaValidarToken", new{ Token });
+            RespuestaBase res = _databaseService.ejecutarSp<RespuestaBase>("Seguridad.SpContrasenaValidarToken", new{ Token });
             return res;
         }
-        public RespuestaBDModel CambiarContrasena(string Token, string Contrasena)
+
+        public RespuestaBase CambiarContrasena(string Token, string Contrasena)
         {
             DataBase con = new DataBase(_appSettings);
             Contrasena = BCrypt.Net.BCrypt.HashPassword(Contrasena);
-            RespuestaBDModel res = _databaseService.ejecutarSp<RespuestaBDModel>("Seguridad.SpCambiarContrasena", new
+            RespuestaBase res = _databaseService.ejecutarSp<RespuestaBase>("Seguridad.SpCambiarContrasena", new
             {
                 Token,
                 Contrasena

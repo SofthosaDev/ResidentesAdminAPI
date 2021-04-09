@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using TuAdelanto.Models;
+using WsAdminResidentes.Models;
 
-namespace TuAdelanto.Helpers
+namespace WsAdminResidentes.Helpers
 {
     public static class ExtensionMethods
     {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TuAdelanto.Models.Utilidades
+namespace WsAdminResidentes.Models.Utilidades
 {
     public class ArchivoModel
     {
@@ -13,6 +13,7 @@ namespace TuAdelanto.Models.Utilidades
     }
 
     public class ArchivoBdModel{
+        public int IdArchivo{ get;set;} = 0;
         public string Ruta { get; set; }
 		public bool EnGoogleDrive { get; set; }
 		public string Extension { get; set; }

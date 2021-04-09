@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TuAdelanto.Models
+namespace WsAdminResidentes.Models
 {
     public class Empresa
     {

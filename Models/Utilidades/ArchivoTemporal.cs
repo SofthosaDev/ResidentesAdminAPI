@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace TuAdelanto.Models.Utilidades
+namespace WsAdminResidentes.Models.Utilidades
 {
     public class ArchivoTemporal
     {

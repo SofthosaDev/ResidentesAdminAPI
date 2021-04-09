@@ -4,16 +4,17 @@ using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TuAdelanto.Services;
-using TuAdelanto.Models;
-using TuAdelanto.Classes;
+using WsAdminResidentes.Services;
+using WsAdminResidentes.Models;
+using WsAdminResidentes.Classes;
 using System.Net;
-using TuAdelanto.Models.Utilidades;
+using WsAdminResidentes.Models.Utilidades;
 using System.IO;
-using TuAdelanto.Services.Utilidades;
+using WsAdminResidentes.Services.Utilidades;
 using EvaluadorFinancieraWS.Services.Utilidades;
+using Microsoft.AspNetCore.Http;
 
-namespace TuAdelanto.Controllers
+namespace WsAdminResidentes.Controllers
 {
     [AllowAnonymous]
     [ApiController]
@@ -35,6 +36,27 @@ namespace TuAdelanto.Controllers
                 var Archivo = std.Archivo;
                 Guid ruta = this._service.SubirArchivo(Archivo);
 
+                return Ok(new {
+                    Ruta = ruta,
+                    Exito = 1,
+                    Mensaje = "Archivo Cargado correctamente"
+                });
+            }
+            catch (Exception er) {
+                return BadRequest(er);
+            }
+        }
+
+        [HttpPost("CargarExcel")]
+        public ActionResult SubirExcel([FromForm] IFormFile archivo)
+        {
+            //RESTRINGIR A EXCEL
+            try
+            {
+                string Nombre = "carga";
+                _service.AgregarFormato("xlsx");
+                Guid ruta = this._service.SubirArchivo(archivo);
+
                 return Ok(new
                 {
                     Ruta = ruta,
@@ -42,7 +64,30 @@ namespace TuAdelanto.Controllers
                     Mensaje = "Archivo Cargado correctamente"
                 });
             }
-            catch (Exception er) {
+            catch (Exception er)
+            {
+                return BadRequest(er);
+            }
+        }
+
+        [HttpPost("Subir")]
+        public ActionResult Subir([FromForm] IFormFile avatar)
+        {
+            //RESTRINGIR A IMAGNES
+            try
+            {
+                string Nombre = "Avatar";
+                Guid ruta = this._service.SubirArchivo(avatar);
+
+                return Ok(new
+                {
+                    Ruta = ruta,
+                    Exito = 1,
+                    Mensaje = "Archivo Cargado correctamente"
+                });
+            }
+            catch (Exception er)
+            {
                 return BadRequest(er);
             }
         }

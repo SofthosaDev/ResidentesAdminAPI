@@ -3,15 +3,16 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Xml;
 using System.Data.SqlTypes;
-using TuAdelanto.Helpers;
+using WsAdminResidentes.Helpers;
 using System.Collections.Generic;
 using System.Text.Json;
-using TuAdelanto.Models;
+using WsAdminResidentes.Models;
+using WsAdminResidentes.Models.RespuestasBd;
 
-namespace TuAdelanto.Classes
+namespace WsAdminResidentes.Classes
 {
 
-    public class RespuestaBDToken : RespuestaBDModel
+    public class RespuestaBDToken : RespuestaBase
     {
         public string token { get; set; }
     }
@@ -206,6 +207,11 @@ namespace TuAdelanto.Classes
                     int valor = int.Parse(pre_valor);
                     CreateParameter($"@{nombre_col}", valor);
                 }
+                if (propiedad.PropertyType == typeof(long))
+                {
+                    long valor = long.Parse(pre_valor);
+                    CreateParameter($"@{nombre_col}", valor);
+                }
                 else if (propiedad.PropertyType == typeof(bool))
                 {
                     bool valor = bool.Parse(pre_valor);
@@ -261,6 +267,11 @@ namespace TuAdelanto.Classes
 
 
         public void CreateParameter(string strParameterName, int nParameter)
+        {
+            command.Parameters.Add(strParameterName, System.Data.SqlDbType.Int, 4).Value = nParameter;
+        }
+
+        public void CreateParameter(string strParameterName, long nParameter)
         {
             command.Parameters.Add(strParameterName, System.Data.SqlDbType.Int, 4).Value = nParameter;
         }

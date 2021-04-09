@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Net;
 using System.Net.Mail;
-using TuAdelanto.Classes;
-using TuAdelanto.Helpers;
+using WsAdminResidentes.Classes;
+using WsAdminResidentes.Helpers;
 using Microsoft.Extensions.Options;
 using EvaluadorFinancieraWS.Services.Cobranza.Utilidades;
 
-namespace TuAdelanto.Services.Utilidades
+namespace WsAdminResidentes.Services.Utilidades
 {
     public interface IEmailService
     {

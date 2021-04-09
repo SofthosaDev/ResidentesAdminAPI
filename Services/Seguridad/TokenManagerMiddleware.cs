@@ -1,10 +1,10 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
-using TuAdelanto.Services;
+using WsAdminResidentes.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
-namespace TuAdelanto.Services.Seguridad
+namespace WsAdminResidentes.Services.Seguridad
 {
 
     public class TokenManagerMiddleware : IMiddleware

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TuAdelanto.Models
+namespace WsAdminResidentes.Models
 {
     public class AutenticacionModel
     {

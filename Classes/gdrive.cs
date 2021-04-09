@@ -13,9 +13,9 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TuAdelanto.Helpers;
+using WsAdminResidentes.Helpers;
 
-namespace PerrosApp.Classes
+namespace WsAdminResidentes.Classes
 {
     public class gdrive
     {
@@ -33,7 +33,7 @@ namespace PerrosApp.Classes
             if (this.service == null) {
                 GoogleCredential credencial;
 
-                using (var stream = new FileStream("Auth/Perros-e53b746a265f.json", FileMode.Open, FileAccess.Read))
+                using (var stream = new FileStream("Auth/Residentes-e53b746a265f.json", FileMode.Open, FileAccess.Read))
                 {
                     credencial = GoogleCredential.FromStream(stream).CreateScoped(Scopes);
                 }
@@ -41,7 +41,7 @@ namespace PerrosApp.Classes
                 DriveService service = new DriveService(new BaseClientService.Initializer()
                 {
                     HttpClientInitializer = credencial,
-                    ApplicationName = "Perros"
+                    ApplicationName = "Residentes"
                 });
                 this.service = service;
             }

@@ -1,6 +1,6 @@
 using System;
 
-namespace TuAdelanto
+namespace WsAdminResidentes
 {
     public class WeatherForecast
     {

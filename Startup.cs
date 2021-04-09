@@ -6,24 +6,25 @@ using System.Text;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using TuAdelanto.Services;
+using WsAdminResidentes.Services;
 using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Reflection;
 using System;
 using System.IO;
 using Microsoft.AspNetCore.Http;
-using TuAdelanto.Services.Utilidades;
+using WsAdminResidentes.Services.Utilidades;
 using Microsoft.Extensions.Caching.Distributed;
-using TuAdelanto.Services.Seguridad;
-using TuAdelanto.Helpers;
+using WsAdminResidentes.Services.Seguridad;
+using WsAdminResidentes.Helpers;
 using Microsoft.OpenApi.Models;
 using EvaluadorFinancieraWS.Services.Cobranza.Utilidades;
 using EvaluadorFinancieraWS.Services.Utilidades;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using WsAdminResidentes.Services.Plantillas;
 
-namespace TuAdelanto
+namespace WsAdminResidentes
 {
     public class Startup
     {
@@ -57,7 +58,7 @@ namespace TuAdelanto
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder => builder
-                //.WithOrigins("http://localhost:5000")
+                .WithOrigins("http://localhost:4200")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());
@@ -125,14 +126,14 @@ namespace TuAdelanto
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddDistributedMemoryCache();
-            services.AddTransient<TuAdelanto.Services.Seguridad.TokenManagerMiddleware>();
+            services.AddTransient<WsAdminResidentes.Services.Seguridad.TokenManagerMiddleware>();
             services.AddScoped<IUsuarioService, UsuariosService>();
             services.AddScoped<IExcelService, ExcelService>();
             services.AddScoped<IEmailService, EMailService>();
             services.AddScoped<IBaseDatosService, BaseDatosService>();
             services.AddScoped<IArchivosService, ArchivosService>();
             services.AddScoped<ISMSService, SMSService>();
-
+            services.AddScoped<IPlantillasService, PlantillasService>();
 
 
         }
@@ -151,7 +152,7 @@ namespace TuAdelanto
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Perros -Documentacion");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Residentes -Documentacion");
                 c.RoutePrefix = string.Empty;
             });
 
@@ -179,7 +180,7 @@ namespace TuAdelanto
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Title = "TuAdelantoDocumentacion",
+                    Title = "ResidentesDocumentacion",
                     Version = "v1",
                 });
 

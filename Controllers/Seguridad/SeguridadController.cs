@@ -1,25 +1,25 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using TuAdelanto.Services;
-using TuAdelanto.Models;
+using WsAdminResidentes.Services;
+using WsAdminResidentes.Models;
 using System.Linq;
-using TuAdelanto.Classes;
+using WsAdminResidentes.Classes;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.Json;
+using WsAdminResidentes.Models.RespuestasBd;
 
-
-namespace TuAdelanto.Controllers
+namespace WsAdminResidentes.Controllers
 {
 
     [ApiController]
     [Route("[controller]")]
     [Authorize]//[AllowAnonymous]
-    public class UsuariosController : ControllerBase
+    public class SeguridadController : ControllerBase
     {
         private IUsuarioService _userService;
 
-        public UsuariosController(IUsuarioService userService)
+        public SeguridadController(IUsuarioService userService)
         {
             _userService = userService;
         }
@@ -31,10 +31,10 @@ namespace TuAdelanto.Controllers
         {
             Authorization = Authorization.Replace("Bearer", "");
             Authorization = Authorization.Trim();
-            RespuestaBDModel res = await this._userService.InhabilitarToken(Authorization, Id_Usuario);
+            RespuestaBase res = await _userService.InhabilitarToken(Authorization, Id_Usuario);
             if (res.Exito)
                 return Ok("Sesión finalizada");
-            return BadRequest(res);
+            return Ok(res);
         }
 
         [AllowAnonymous]
@@ -43,18 +43,12 @@ namespace TuAdelanto.Controllers
         {
             Usuario user = _userService.Authenticate(modelo.Nombre, modelo.Contrasena);
             if (user == null)
+            {
                 return BadRequest(new
                 {
                     Codigo = CodigoErrores.USUARIO_INVALIDO,
                     Exito = false,
                     Mensaje = "Usuario o contraseña incorrecta"
-                });
-            if (user.EsNuevo)
-            {
-                return BadRequest(new
-                {
-                    Codigo = CodigoErrores.USUARIO_NUEVO,
-                    Mensaje = "Usuario Nuevo, Realiza el proceso de registro del usuario"
                 });
             }
             return Ok(user);
@@ -79,30 +73,17 @@ namespace TuAdelanto.Controllers
         [HttpPost("ResetearContrasena")]
         public IActionResult ResetearContrasena(SolicitudToken s)
         {
-            RespuestaBDModel res = this._userService.CrearTokenRecuperacion(s.NombreUsuario);
-            if (res.Exito)
-            {
-                return Ok(res);
-            }
-            else
-            {
-                return BadRequest(res);
-            }
+            RespuestaBase res = _userService.CrearTokenRecuperacion(s.NombreUsuario);
+            return Ok(res);
+
         }
 
         [AllowAnonymous]
         [HttpPost("ValidarTokenReseteo/{Token}")]
         public IActionResult ValidarToken([FromRoute] string Token)
         {
-            RespuestaBDModel res = this._userService.ValidarToken(Token);
-            if (res.Exito)
-            {
-                return Ok(res);
-            }
-            else
-            {
-                return BadRequest(res);
-            }
+            RespuestaBase res = this._userService.ValidarToken(Token);
+            return Ok(res);
         }
 
         [AllowAnonymous]
@@ -112,21 +93,14 @@ namespace TuAdelanto.Controllers
             List<string> errores = this._userService.ValidarContrasena(c.Contrasena);
             if (errores.Count > 0)
             {
-                return BadRequest(new RespuestaBDModel
+                return Ok(new RespuestaBase
                 {
                     Exito = false,
                     Mensaje = JsonSerializer.Serialize(errores)
                 });
             }
-            RespuestaBDModel res = this._userService.CambiarContrasena(Token, c.Contrasena);
-            if (res.Exito)
-            {
-                return Ok(res);
-            }
-            else
-            {
-                return BadRequest(res);
-            }
+            RespuestaBase res = this._userService.CambiarContrasena(Token, c.Contrasena);
+            return Ok(res);
         }
 
         [HttpGet]

@@ -1,5 +1,11 @@
-﻿namespace TuAdelanto.Helpers
+﻿namespace WsAdminResidentes.Helpers
 {
+
+    public class Plantillas
+    {
+        public string RecuperacionContrasena { get; set; }
+        public string Bienvenido { get; set; }
+    }
     public class Correo
     {
         public string host { get; set; }
@@ -16,6 +22,7 @@
     public class AppSettings
     {
         public string Secret { get; set; }
+        public string UrlAdmin { get; set; }
         public string CadenaConexion { get; set; }
         public double HorasExpiracion { get; set; }
 
@@ -32,6 +39,7 @@
         public string GDriveKey { get; set; }
 
         public CredencialTemporal CredencialTemporal { get; set; }
+        public Plantillas Plantillas { get; set; }
     }
 
 

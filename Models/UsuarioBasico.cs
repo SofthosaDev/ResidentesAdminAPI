@@ -5,18 +5,12 @@ using System.Threading.Tasks;
 
 namespace WsAdminResidentes.Models
 {
-    public class Perfil
+    public class UsuarioBasico
     {
-        public int IdPerfil { get; set; } = 0;
+        public string Celular { get; set; }
         public string PrimerNombre { get; set; }
         public string SegundoNombre { get; set; }
         public string ApellidoPaterno { get; set; }
         public string ApellidoMaterno { get; set; }
-        public DateTime FechaNacimiento { get; set; }
-        public int AvatarId { get; set; } = 1;
-        public int GeneroId { get; set; }
-        public int UsuarioId { get; set; } = 0;
-
-
     }
 }

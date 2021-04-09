@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
-using TuAdelanto.Models.Utilidades;
+using WsAdminResidentes.Models.Utilidades;
 using Microsoft.EntityFrameworkCore;
-using TuAdelanto.Helpers;
+using WsAdminResidentes.Helpers;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;
 
-namespace TuAdelanto.Services.Utilidades
+namespace WsAdminResidentes.Services.Utilidades
 {
     public class SqliteContext : DbContext
     {

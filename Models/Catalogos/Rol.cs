@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace WsAdminResidentes.Models
+namespace WsAdminResidentes.Models.Catalogos
 {
-    public class DocumentosModel
+    public class Rol
     {
-        public string Guid { get; set; }
-        public string Comentarios { get; set; }
+        public int IdRol { get;set;}
+        public string Nombre { get; set; }
         public string Clave { get; set; }
     }
 }

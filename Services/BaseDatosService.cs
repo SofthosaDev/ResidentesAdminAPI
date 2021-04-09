@@ -1,6 +1,6 @@
-﻿using TuAdelanto.Classes;
-using TuAdelanto.Models;
-using TuAdelanto.Helpers;
+﻿using WsAdminResidentes.Classes;
+using WsAdminResidentes.Models;
+using WsAdminResidentes.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,14 +10,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
+using WsAdminResidentes.Models.RespuestasBd;
 
 namespace EvaluadorFinancieraWS.Services.Cobranza.Utilidades
 {
     public interface IBaseDatosService
     {
         public List<T> consultarSp<T>(string sp, object parametros) where T : class, new();
+        public DataTable consultarSp(string sp, object parametros);
         public T ejecutarSp<T>(string sp, object parametros) where T : class, new();
-        public RespuestaBDModel ejecutarSp(string sp, object parametros);
+        public RespuestaBase ejecutarSp(string sp, object parametros);
         public int GetUsuarioFromSession();
     };
     public class BaseDatosService : IBaseDatosService
@@ -89,9 +91,26 @@ namespace EvaluadorFinancieraWS.Services.Cobranza.Utilidades
 
         }
 
-        public RespuestaBDModel ejecutarSp(string sp, object parametros)
+        public RespuestaBase ejecutarSp(string sp, object parametros)
         {
-            return ejecutarSp<RespuestaBDModel>(sp, parametros);
+            return ejecutarSp<RespuestaBase>(sp, parametros);
+        }
+
+        public DataTable consultarSp(string sp, object parametros)
+        {
+            int Id_Usuario = 0;
+            if (_httpContextAccessor != null)
+            {
+                string val = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (val != null)
+                {
+                    Id_Usuario = int.Parse(val);
+                }
+
+            }
+            DataBase db = new DataBase(appSettings);
+            DataSet ds = db.ejecutarSp(sp, parametros, Id_Usuario);
+            return ds.Tables[0];
         }
     }
 }

@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 using EvaluadorFinancieraWS.Services.Cobranza.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PerrosApp.Models.Empleado;
-using TuAdelanto.Models;
-using TuAdelanto.Services;
+using WsAdminResidentes.Models;
+using WsAdminResidentes.Services;
+using WsAdminResidentes.Models.RespuestasBd;
+using WsAdminResidentes.Models.Argumentos;
 
-namespace TuAdelanto.Controllers.Usuarios
+namespace WsAdminResidentes.Controllers.Usuarios
 {
-    [Authorize]//[AllowAnonymous]
+    [Authorize]
     [Route("[controller]")]
     public class ConfirmacionController : Controller
     {
@@ -26,26 +27,16 @@ namespace TuAdelanto.Controllers.Usuarios
             this._usuario = _usuario;
         }
 
-        ///pendientes:
-        ///Mover esto al solicitar adelanto, para asegurar que el empleado no deje sin crear su usuario
-        /// <summary>
-        /// Verifica si el usuario tiene la información requerida completa, retorna un objeto con la propiedad
-        /// Exito = True cuando la información necesaria está completa
-        /// Exito = False cuando la información aún está pendiente
-        [HttpGet("TieneInformacionCompleta")]
-        [Authorize(AuthenticationSchemes ="Temporal")]
-        public IActionResult TieneInformacionCompleta() {
-            RespuestaBDModel res = _base.ejecutarSp("Adelantos.SpEmpleadoTieneDatosCompletos", new { });
-            return Ok(res);
-        }
 
         /// <summary>
-        /// Actualiza la informacion del empleado mediante el token temporal
-        [HttpPost("ActualizarDatos")]
+        /// Método para saber si el usuario tiene pendiente completar su información de perfil
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("TieneInformacionCompleta")]
         [Authorize(AuthenticationSchemes = "Temporal")]
-        public IActionResult ActualizarDatos([FromBody] EmpleadoDatos datos)
+        public IActionResult TieneInformacionCompleta()
         {
-            RespuestaBDModel res = _base.ejecutarSp("Adelantos.SpEmpleadoDatosACT", datos);
+            RespuestaBase res = _base.ejecutarSp("Seguridad.SpPerfilCompletado", new { });
             return Ok(res);
         }
 
@@ -67,17 +58,15 @@ namespace TuAdelanto.Controllers.Usuarios
                 });
             }
             contrasena = _usuario.Encriptar(contrasena);
-            RespuestaBDModel res = _base.ejecutarSp("Adelantos.SpEmpleadoContrasenaACT", new {
+            RespuestaBase res = _base.ejecutarSp("Seguridad.SpEmpleadoContrasenaACT", new {
                 Contrasena = contrasena
             });
             return Ok(res);
         }
 
         /// <summary>
-        /// Primero genera el código de confirmación celular
-        /// Despues valida que el empleado tenga sus datos obligatorios
-        /// completos, si no retorna error DATOS_EMPLEADO_INCOMPLETOS
-        /// Finalmente guarda el código de confirmacion en BD, y lo envía por SMS
+        /// Genera codigo de confirmación, lo guarda en base de datos y lo envía
+        /// por SMS
         /// </summary>
         /// <param name="Celular"></param>
         /// <returns></returns>
@@ -91,20 +80,21 @@ namespace TuAdelanto.Controllers.Usuarios
                 string Codigo = bigInt.ToString().Replace("-",""); ;
                 Codigo = Codigo.ToString().Substring(0, 5);
 
-                List<Empleado> lista = _base.consultarSp<Empleado>(
-                    "Seguridad.SpUsuariosValidar",
-                    new { Nombre = Celular });
-                Empleado empleado = null;
+                List<Usuario> lista = _base.consultarSp<Usuario>(
+                    "Seguridad.SpUsuarioConsultar",
+                    new { Celular });
+                Usuario usuario = null;
+
                 if (lista.Count > 0) {
-                    empleado = lista.First();
+                    usuario = lista.First();
                 }
 
-                RespuestaActualizacionBDModel res = _base.ejecutarSp<RespuestaActualizacionBDModel>(
-                    "Adelantos.SpEmpleadoCodigoConfirmacionACT", 
+                RespuestaInsercion res = _base.ejecutarSp<RespuestaInsercion>(
+                    "Seguridad.SpUsuarioCodigoConfirmacionACT", 
                     new 
                     {
                         Codigo,
-                        empleado.IdEmpleado
+                        usuario.IdUsuario
                     });
                 if (!res.Exito) {
                     return Ok(res);
@@ -134,30 +124,32 @@ namespace TuAdelanto.Controllers.Usuarios
         [AllowAnonymous]
         public IActionResult ConfirmarCodigo([FromBody] ConfirmacionCelular conf) {
             try {
-                List<Empleado> lista = _base.consultarSp<Empleado>(
-                    "Seguridad.SpUsuariosValidar",
-                    new { Nombre = conf.Celular });
-                Empleado empleado = null;
+                List<Usuario> lista = _base.consultarSp<Usuario>(
+                    "Seguridad.SpUsuarioConsultar",
+                    new { conf.Celular });
+                Usuario usuario = null;
                 if (lista.Count > 0)
                 {
-                    empleado = lista.First();
+                    usuario = lista.First();
                 }
 
                 if (conf == null)
-                    throw (new Exception("Requeridos"));
-                RespuestaBDModel res = _base.ejecutarSp<RespuestaBDModel>("Adelantos.SpEmpleadoCodigoConfirmacionCON", new { 
-                    conf.Celular,
-                    conf.CodigoConfirmacion
-                });
+                    throw new Exception("Requeridos");
+
+                RespuestaBase res = _base.ejecutarSp<RespuestaBase>(
+                    "Adelantos.SpUsuarioCodigoConfirmacionCON", new { 
+                        conf.Celular,
+                        conf.CodigoConfirmacion
+                    }
+                );
                 string token = "";
                 if (res.Exito) {
-                    res = _base.ejecutarSp<RespuestaBDModel>("Adelantos.SpConfirmarUsuarioPROC", new {
-                        empleado.IdEmpleado
-                    });
+                    //res = _base.ejecutarSp<RespuestaBasica>("Adelantos.SpConfirmarUsuarioPROC", new {
+                    //    usuario.IdUsuario
+                    //});
                     token = _usuario.GenerarTokenTemporal(conf.Celular);
-
-
                 }
+
                 return Ok(new {
                     res.Exito,
                     res.Codigo,

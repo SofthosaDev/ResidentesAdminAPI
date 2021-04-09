@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Data;
 using ExcelDataReader;
-using TuAdelanto.Helpers;
+using WsAdminResidentes.Helpers;
 
-namespace TuAdelanto.Services.Utilidades
+namespace WsAdminResidentes.Services.Utilidades
 {
     public interface IExcelService
     {

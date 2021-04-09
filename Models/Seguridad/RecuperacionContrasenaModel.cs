@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace TuAdelanto.Models
+namespace WsAdminResidentes.Models
 {
     [JsonObject]
     public class RecuperacionContrasenaModel

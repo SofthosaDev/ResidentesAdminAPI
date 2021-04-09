@@ -1,23 +1,24 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using TuAdelanto.Services;
-using TuAdelanto.Models;
+using WsAdminResidentes.Services;
+using WsAdminResidentes.Models;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Data;
 using System;
-using TuAdelanto.Helpers;
-using TuAdelanto.Classes;
-using TuAdelanto.Services.Utilidades;
+using WsAdminResidentes.Helpers;
+using WsAdminResidentes.Classes;
+using WsAdminResidentes.Services.Utilidades;
 using EvaluadorFinancieraWS.Services.Cobranza.Utilidades;
+using WsAdminResidentes.Models.RespuestasBd;
 
-namespace TuAdelanto.Controllers
+namespace WsAdminResidentes.Controllers
 {
 
     [ApiController]
     [Route("[controller]")]
-    [AllowAnonymous]
+    [Authorize]
     public class PerfilesController : ControllerBase
     {
         private IBaseDatosService _database;
@@ -39,7 +40,7 @@ namespace TuAdelanto.Controllers
 
         [HttpPost("")]
         public IActionResult Guardar(Perfil perfil) {
-            RespuestaInsercionBDModel res = _database.ejecutarSp<RespuestaInsercionBDModel>(
+            RespuestaInsercion res = _database.ejecutarSp<RespuestaInsercion>(
                 "SpPerfilACT", 
                 perfil);
             if (res.Exito) {
@@ -50,12 +51,14 @@ namespace TuAdelanto.Controllers
         }
 
         [HttpPut("{IdPerfil}")]
+        [Authorize(AuthenticationSchemes = "Temporal")]
         public IActionResult Actualizar([FromRoute] int IdPerfil, Perfil perfil)
         {
             perfil.IdPerfil = IdPerfil;
-            RespuestaActualizacionBDModel res = _database.ejecutarSp<RespuestaActualizacionBDModel>(
-               "SpPerfilACT",
+            RespuestaActualizacion res = _database.ejecutarSp<RespuestaActualizacion>(
+               "Seguridad.SpPerfilACT",
                perfil);
+
             if (!res.Encontrado)
                 return NotFound();
             if (res.Exito)
