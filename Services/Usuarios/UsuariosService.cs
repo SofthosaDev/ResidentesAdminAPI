@@ -119,10 +119,11 @@ namespace WsAdminResidentes.Services
         {
             //DataBase con = new DataBase(_appSettings);
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(Contrasena);
-            List<Usuario> lista_usuarios = 
-                _databaseService.consultarSp<Usuario>("Seguridad.SpUsuarioConsultar", new { 
+            List<Usuario> lista_usuarios =
+                _databaseService.consultarSp<Usuario>("Seguridad.SpUsuarioConsultar", new
+                {
                     Nombre
-            });
+                });
             Usuario usuario = null;
             if (lista_usuarios.Count > 0)
             {
@@ -131,9 +132,10 @@ namespace WsAdminResidentes.Services
 
             if (usuario == null)
                 return null;
-            
+
             bool verified = BCrypt.Net.BCrypt.Verify(Contrasena, usuario.Password);
-            if (!verified) {
+            if (!verified)
+            {
                 return null;
             }
 

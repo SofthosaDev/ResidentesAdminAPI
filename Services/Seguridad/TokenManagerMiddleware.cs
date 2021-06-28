@@ -32,7 +32,7 @@ namespace WsAdminResidentes.Services.Seguridad
             }
             auth = auth.Replace("Bearer", "");
             auth = auth.Trim();
-            if (await this._usuario_service.EsActivoToken(auth))
+            if (await _usuario_service.EsActivoToken(auth))
             {
                 await next(context);
                 return;
