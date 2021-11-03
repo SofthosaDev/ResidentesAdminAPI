@@ -62,7 +62,7 @@ namespace WsAdminResidentes.Classes
             }
             return data;
 
-        }
+        }   
 
         public List<string> GetParametrosInvalidos(Object parametros, string sp)
         {
