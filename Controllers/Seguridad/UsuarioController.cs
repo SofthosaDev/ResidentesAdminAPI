@@ -124,7 +124,7 @@ namespace WsAdminResidentes.Controllers.Seguridad
         [HttpGet("{IdUsuario}")]
         public UsuarioConsulta ConsultarUno([FromRoute] int IdUsuario)
         {
-            UsuarioConsulta uno = _dataBaseService.consultarSp<UsuarioConsulta>("Seguridad.SpUsuariosCON", new
+            UsuarioConsulta uno = _dataBaseService.consultarSp<UsuarioConsulta>("Seguridad.SpAdminUsuariosCON", new
             {
                 IdUsuario
             }).ToList().First();
@@ -135,25 +135,19 @@ namespace WsAdminResidentes.Controllers.Seguridad
         [HttpGet("")]
         public List<UsuarioConsulta> GetAll(
             int IdUsuario = 0,
-            string PrimerNombre = "",
-            string SegundoNombre = "",
-            string ApellidoPaterno = "",
-            string ApellidoMaterno = "",
-            string Nombre = "",
+            string NombreUsuario = "",
             int RolId = 0,
+            int EstatusId = 0,
             int Limite = 1,
             int Pagina = 1
             )
         {
 
-            List<UsuarioConsulta> lista = _dataBaseService.consultarSp<UsuarioConsulta>("Seguridad.SpUsuariosCON", new
+            List<UsuarioConsulta> lista = _dataBaseService.consultarSp<UsuarioConsulta>("Seguridad.SpAdminUsuariosCON", new
             {
                 IdUsuario,
-                PrimerNombre,
-                SegundoNombre,
-                ApellidoPaterno,
-                ApellidoMaterno,
-                Nombre,
+                NombreUsuario,
+                EstatusId,
                 RolId,
                 Limite,
                 Pagina

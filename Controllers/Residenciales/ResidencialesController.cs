@@ -20,17 +20,15 @@ namespace WsAdminResidentes.Controllers.Residenciales
             this._db = _db;
         }
         [HttpGet]
-        public List<Residencia> ConsultarTodo(string Nombre = "") {
-           List<Residencia> res = _db.consultarSp<Residencia>("Residentes.SpResidencialCON", new { 
-                Nombre
-            });
+        public List<Residencia> ConsultarTodo() {
+           List<Residencia> res = _db.consultarSp<Residencia>("Residencial.SpAdminResidencialesCON", new { });
             return res;
         }
 
         [HttpGet("{IdResidencial}")]
         public IActionResult ConsultarTodo([FromRoute] int IdResidencial)
         {
-            Residencia res = _db.consultarSp<Residencia>("Residentes.SpResidencialCON", new
+            Residencia res = _db.consultarSp<Residencia>("Residencial.SpAdminResidentesCON", new
             {
                 IdResidencial
             }).FirstOrDefault();

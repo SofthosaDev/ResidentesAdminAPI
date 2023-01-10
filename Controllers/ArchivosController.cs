@@ -25,16 +25,30 @@ namespace WsAdminResidentes.Controllers
         private IArchivosService _service;
         public ArchivosController(IArchivosService service)
         {
-            this._service = service;
+            _service = service;
+            _service.AgregarFormato(Formato.JPG);
+            _service.AgregarFormato(Formato.PNG);
+            _service.AgregarFormato(Formato.GIF);
         }
 
+        /// <summary>
+        /// Sube un archivo a un espacio temporal
+        /// </summary>
+        /// <param name="std"></param>
+        /// <returns>GUID: El GUID Retornado identifica la ubicación del archivo, 
+        /// este ID se utiliza como si fuera el archivo en si, una ves recibido por otros 
+        /// métodos es "confirmado", almacenado en la nube (google drive) y eliminado
+        /// del espacio temporal</returns>
         [HttpPost]
         public ActionResult Subir([FromForm] ArchivoModel std)
         {
             try {
                 string Nombre = std.Nombre;
                 var Archivo = std.Archivo;
-                Guid ruta = this._service.SubirArchivo(Archivo);
+                //_service.AgregarFormato("JPG");
+                //_service.AgregarFormato("JPEG");
+
+                Guid ruta = _service.SubirArchivo(Archivo);
 
                 return Ok(new {
                     Ruta = ruta,
@@ -47,15 +61,20 @@ namespace WsAdminResidentes.Controllers
             }
         }
 
+        /// <summary>
+        /// Sube archivos tipo Excel
+        /// </summary>
+        /// <param name="archivo"></param>
+        /// <returns>Retorna la ruta donde el archivo estará almacenado</returns>
         [HttpPost("CargarExcel")]
-        public ActionResult SubirExcel([FromForm] IFormFile archivo)
+        public ActionResult SubirExcel(IFormFile archivo)
         {
             //RESTRINGIR A EXCEL
             try
             {
                 string Nombre = "carga";
-                _service.AgregarFormato("xlsx");
-                Guid ruta = this._service.SubirArchivo(archivo);
+                _service.AgregarFormato(Formato.XLSX);
+                Guid ruta = _service.SubirArchivo(archivo);
 
                 return Ok(new
                 {
@@ -71,13 +90,13 @@ namespace WsAdminResidentes.Controllers
         }
 
         [HttpPost("Subir")]
-        public ActionResult Subir([FromForm] IFormFile avatar)
+        public ActionResult Subir(IFormFile avatar)
         {
             //RESTRINGIR A IMAGNES
             try
             {
                 string Nombre = "Avatar";
-                Guid ruta = this._service.SubirArchivo(avatar);
+                Guid ruta = _service.SubirArchivo(avatar);
 
                 return Ok(new
                 {

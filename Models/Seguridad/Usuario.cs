@@ -27,7 +27,8 @@ namespace WsAdminResidentes.Models
         public string CodigoCelular { get; set; }
 
         public string Celular { get; set; }
-
+        public string Correo { get; set; }
+        public int UsuarioPerfilId { get; set; }
         //public string ClaveRol { get; set; }
         //public string Rol { get; set; }
 
@@ -65,6 +66,8 @@ namespace WsAdminResidentes.Models
         public string Correo { get; set; }
         public string Celular { get; set; }
         public int AvatarId { get; set; }
+
+        public string Residencial { get; set; }
     }
 
     public class UsuarioActualizacion {

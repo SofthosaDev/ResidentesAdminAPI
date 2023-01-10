@@ -115,23 +115,28 @@ namespace WsAdminResidentes.Services
             return usuario.Token;
         }
 
-        public Usuario Authenticate(string Nombre, string Contrasena)
+        public Usuario Authenticate(string Correo, string Contrasena)
         {
             //DataBase con = new DataBase(_appSettings);
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(Contrasena);
             List<Usuario> lista_usuarios =
-                _databaseService.consultarSp<Usuario>("Seguridad.SpUsuarioConsultar", new
+                _databaseService.consultarSp<Usuario>("Seguridad.SpAdminUsuarioConsultar", new
                 {
-                    Nombre
+                    Correo
                 });
+
+            //TODO
+            //si se regresa mas de un usuario es porque tiene varios usuarios con perfiles para el administrador
             Usuario usuario = null;
-            if (lista_usuarios.Count > 0)
+            if (lista_usuarios.Count > 0)//Por ahora usaremos el primero
             {
                 usuario = lista_usuarios[0];
             }
 
             if (usuario == null)
                 return null;
+
+            //usuario.EstatusClave = 
 
             bool verified = BCrypt.Net.BCrypt.Verify(Contrasena, usuario.Password);
             if (!verified)
@@ -147,9 +152,10 @@ namespace WsAdminResidentes.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
-                    new Claim(ClaimTypes.Name, usuario.Nombre.ToString()),
-                    new Claim(ClaimTypes.Role, usuario.Rol.ToString())
+                    new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioPerfilId.ToString()),
+                    new Claim(ClaimTypes.Name, usuario.Correo.ToString()),
+                    new Claim(ClaimTypes.Role, usuario.Rol.ToString()),
+                    new Claim(ClaimTypes.PrimarySid, usuario.UsuarioPerfilId.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddHours(_appSettings.HorasExpiracion),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -158,23 +164,24 @@ namespace WsAdminResidentes.Services
             string refreshToken = Guid.NewGuid().ToString();
             usuario.Token = tokenHandler.WriteToken(token);
             usuario.RefreshToken = refreshToken;
-            AgregarToken(usuario.IdUsuario, usuario.Token, usuario.RefreshToken);
+            AgregarToken(usuario.UsuarioPerfilId, usuario.Token, usuario.RefreshToken);
             return usuario.WithoutPassword();
         }
 
 
-        private void AgregarToken(int IdUsuario, string Token, string RefreshToken,
+        private void AgregarToken(int UsuarioPerfilId, string Token, string RefreshToken,
             string AnteriorToken = "")
         {
             DataBase con = new DataBase(_appSettings);
             int minutos = _appSettings.RefreshTokenMinutosVigencia;
             RespuestaBase res = _databaseService.ejecutarSp<RespuestaBase>("Seguridad.SpUsuarioTokenALT", new
             {
-                IdUsuario,
+                UsuarioPerfilId,
                 Token,
                 RefreshToken,
                 VigenciaRefreshToken = minutos,
-                AnteriorToken
+                AnteriorToken,
+
             });
         }
 

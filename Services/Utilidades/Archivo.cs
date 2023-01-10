@@ -37,7 +37,8 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
         public Task<Stream> GetGoogleDriveImagen(string id);
         public ArchivoBdModel GetArchivoBd(int id);
         public byte[] StreamToByteArray(Stream stream);
-        public void AgregarFormato(string formato);
+        public void AgregarFormato(Formato formato);
+        public List<Formato> GetFormatos();
     }
     public class ArchivosService : IArchivosService
     {
@@ -47,7 +48,7 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
 
         private const double mb = 1048576;
         private readonly SqliteContext SqliteContext;
-        public List<string> Formatos;
+        private List<Formato> Formatos;
         private readonly IBaseDatosService _db;
 
         public ArchivosService(IBaseDatosService _db, IOptions<AppSettings> appSettings, int tamano_maximo = 50/*MB*/ )
@@ -57,7 +58,7 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
             tamanoMaximo = 50 * mb;
             _dbContext = new SqliteContext(appSettings);
             SqliteContext = new SqliteContext(appSettings);
-            Formatos = new List<string>();
+            Formatos = new List<Formato>();
         }
 
         public void EliminarAntiguos()
@@ -116,6 +117,12 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
             this.SqliteContext.SaveChanges();
         }
 
+        /// <summary>
+        /// Sube un archivo a un espacio temporal, valida tamaño y formato
+        /// </summary>
+        /// <param name="Archivo"></param>
+        /// <returns>Guid para identificarlo</returns>
+        /// <exception cref="Exception"></exception>
         public Guid SubirArchivo(IFormFile Archivo)
         {
             ValidarTamano(Archivo);
@@ -300,9 +307,14 @@ namespace EvaluadorFinancieraWS.Services.Utilidades
             return total_stream;
         }
 
-        public void AgregarFormato(string formato)
+        public void AgregarFormato(Formato formato)
         {
             this.Formatos.Add(formato);
+        }
+
+        public List<Formato> GetFormatos()
+        {
+            return this.Formatos;
         }
     }
 }

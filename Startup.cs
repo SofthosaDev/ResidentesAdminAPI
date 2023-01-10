@@ -31,17 +31,11 @@ namespace WsAdminResidentes
         public Startup(IWebHostEnvironment env)
         {
             string json_path = "";
-            if (env.EnvironmentName == "production")
-            {
-                json_path = "appsettings.json";
-            }
-            else
-            {
-                json_path = "appsettings.Development.json";
-            }
+            json_path = "appsettings.json";
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddJsonFile(json_path, optional: false, reloadOnChange: true);
+                .AddJsonFile(json_path, optional: false, reloadOnChange: true)
+                .AddUserSecrets(Assembly.GetExecutingAssembly(), true);
 
 
             Configuration = builder.Build();
@@ -150,6 +144,8 @@ namespace WsAdminResidentes
             app.UseHttpsRedirection();
             app.UseCors("CorsPolicy");
             app.UseSwagger();
+            app.UseDeveloperExceptionPage();
+
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Residentes -Documentacion");
@@ -176,6 +172,7 @@ namespace WsAdminResidentes
         {
             string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
@@ -205,8 +202,8 @@ namespace WsAdminResidentes
                     } 
                 });
 
-
-               //c.IncludeXmlComments(xmlPath);
+                var xmlPath = Path.Combine(System.AppContext.BaseDirectory, "WsAdminResidentes.xml");
+                c.IncludeXmlComments(xmlPath);
             });
         }
     }

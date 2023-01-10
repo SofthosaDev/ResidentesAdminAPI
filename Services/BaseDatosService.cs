@@ -47,9 +47,19 @@ namespace EvaluadorFinancieraWS.Services.Cobranza.Utilidades
                 }
 
             }
+            int Id_Perfil = 0;
+            if (_httpContextAccessor != null)
+            {
+                string val = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.PrimarySid)?.Value;
+                if (val != null)
+                {
+                    Id_Perfil = int.Parse(val);
+                }
+
+            }
             List<T> lista;
             DataBase db = new DataBase(appSettings);
-            DataSet ds = db.ejecutarSp(sp, parametros, Id_Usuario);
+            DataSet ds = db.ejecutarSp(sp, parametros, Id_Usuario, Id_Perfil);
             lista = ds.Tables[0].ToList<T>();
             //ds.Dispose();
             //db.Dispose();
@@ -81,9 +91,21 @@ namespace EvaluadorFinancieraWS.Services.Cobranza.Utilidades
                 }
 
             }
+            int Id_Perfil = 0;
+            if (_httpContextAccessor != null)
+            {
+                string val = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.PrimarySid)?.Value;
+                if (val != null)
+                {
+                    Id_Perfil = int.Parse(val);
+                }
+
+            }
+
+
             List<T> lista;
             DataBase db = new DataBase(appSettings);
-            DataSet ds = db.ejecutarSp(sp, parametros, Id_Usuario);
+            DataSet ds = db.ejecutarSp(sp, parametros, Id_Usuario, Id_Perfil);
             lista = ds.Tables[0].ToList<T>();
             //ds.Dispose();
             //db.Dispose();
@@ -108,8 +130,19 @@ namespace EvaluadorFinancieraWS.Services.Cobranza.Utilidades
                 }
 
             }
+            int Id_Perfil = 0;
+            if (_httpContextAccessor != null)
+            {
+                string val = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.PrimarySid)?.Value;
+                if (val != null)
+                {
+                    Id_Perfil = int.Parse(val);
+                }
+
+            }
+
             DataBase db = new DataBase(appSettings);
-            DataSet ds = db.ejecutarSp(sp, parametros, Id_Usuario);
+            DataSet ds = db.ejecutarSp(sp, parametros, Id_Usuario, Id_Perfil);
             return ds.Tables[0];
         }
     }

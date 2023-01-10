@@ -154,22 +154,11 @@ namespace WsAdminResidentes.Classes
                 command = new SqlCommand(Comando, _conexion);
                 command.CommandTimeout = 36000;
             }
-            else
-            {
-                try
-                { command.Cancel(); }
-                catch (Exception)
-                { }
-                try
-                { command.Parameters.Clear(); }
-                catch (Exception)
-                { }
-            }
             command.CommandText = Comando;
             command.CommandType = CommandType.StoredProcedure;
         }
 
-        public DataSet ejecutarSp(string sp, Object parametros, int Id_Usuario = 0)
+        public DataSet ejecutarSp(string sp, Object parametros, int Id_Usuario, int Id_Perfil)
         {
             Type tipo = parametros.GetType();
             SetCommand(sp);
@@ -182,6 +171,7 @@ namespace WsAdminResidentes.Classes
             }
 
             //Si el Id_Usuario no es requerido por el SP no se envía
+            AgregarPerfilSiSeRequiere(Id_Perfil, sp);
             AgregarUsuarioSiSeRequiere(Id_Usuario, sp);
 
             System.Reflection.PropertyInfo[] propiedades = tipo.GetProperties();
@@ -351,6 +341,17 @@ namespace WsAdminResidentes.Classes
             if (l_i.Count == 0)
             {
                 CreateParameter($"@UsuarioAccionId", Id_Usuario);
+            }
+        }
+
+        private void AgregarPerfilSiSeRequiere(int Id_Perfil, string sp)
+        {
+            if (Id_Perfil == 0)
+                return;
+            List<string> l_i = GetParametrosInvalidos(new { PerfilAccionId = Id_Perfil }, sp);
+            if (l_i.Count == 0)
+            {
+                CreateParameter($"@PerfilAccionId", Id_Perfil);
             }
         }
 
