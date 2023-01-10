@@ -35,7 +35,8 @@ namespace WsAdminResidentes
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile(json_path, optional: false, reloadOnChange: true)
-                .AddUserSecrets(Assembly.GetExecutingAssembly(), true);
+                .AddUserSecrets(Assembly.GetExecutingAssembly(), true)
+                .AddEnvironmentVariables();
 
 
             Configuration = builder.Build();
