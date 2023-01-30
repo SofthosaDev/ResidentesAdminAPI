@@ -173,13 +173,18 @@ namespace WsAdminResidentes
         {
             string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            string version = Environment.GetEnvironmentVariable("app_version");
 
+            if (string.IsNullOrEmpty(version))
+            {
+                version = "Version no disponible";
+            }
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "ResidentesDocumentacion",
-                    Version = "v1",
+                    Version = $"{version}",
                 });
 
                  c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
