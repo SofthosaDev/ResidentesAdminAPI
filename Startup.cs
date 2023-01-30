@@ -53,7 +53,7 @@ namespace WsAdminResidentes
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder => builder
-                .WithOrigins("http://localhost:4200", "http://20.232.209.163")
+                .WithOrigins("http://20.232.209.163")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());
