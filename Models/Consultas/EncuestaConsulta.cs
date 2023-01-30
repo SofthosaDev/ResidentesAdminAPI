@@ -11,6 +11,7 @@ namespace WsAdminResidentes.Models.Consultas.Encuestas
         public bool EsFinalizada { get; set; }
         public bool EsNivelResidencial { get; set; }
         public int ResidencialId { get; set; }
+        public bool EsVisible { get; set; }
         public List<int> ResidenteIds { get;set; }
         public DateTime FechaAlta { get; set; }
     }
