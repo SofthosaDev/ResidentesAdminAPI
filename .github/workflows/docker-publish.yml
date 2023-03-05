@@ -2,8 +2,8 @@ name: Publicar imagen a docker hub
 
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - desarrollo
 jobs:
   docker:
     runs-on: ubuntu-latest
